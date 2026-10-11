@@ -773,33 +773,147 @@ async function loadAnalyticsData() {
     const res = await fetch("/api/analytics/insights");
     if (!res.ok) throw new Error("Could not fetch analytics insights");
     const data = await res.json();
+    const kpis = data.kpis || data;
 
-    const kpiTotal = document.getElementById("kpiTotalOrders");
-    if (kpiTotal) kpiTotal.textContent = data.total_orders;
+    // 1. Executive Top KPIs
+    const revEl = document.getElementById("kpiRevenue");
+    if (revEl) revEl.textContent = `$${(kpis.total_revenue || 0).toFixed(2)}`;
 
-    const kpiActive = document.getElementById("kpiActiveOrders");
-    if (kpiActive) kpiActive.textContent = data.active_orders;
+    const todayRevEl = document.getElementById("kpiTodayRev");
+    if (todayRevEl) todayRevEl.textContent = `+$${(kpis.today_revenue || 0).toFixed(2)} today (${kpis.today_orders || 0} orders)`;
 
-    const kpiRating = document.getElementById("kpiAvgRating");
-    if (kpiRating) kpiRating.textContent = `★ ${data.average_rating}`;
+    const totalOrdersEl = document.getElementById("kpiTotalOrders");
+    if (totalOrdersEl) totalOrdersEl.textContent = kpis.total_orders || 0;
 
-    const kpiReviews = document.getElementById("kpiTotalReviews");
-    if (kpiReviews) kpiReviews.textContent = data.total_reviews;
+    const compPctEl = document.getElementById("kpiCompletedPct");
+    if (compPctEl) compPctEl.textContent = `${kpis.completion_rate_pct || 100}% completed`;
 
-    // Top drinks
+    const activeEl = document.getElementById("kpiActiveOrders");
+    if (activeEl) activeEl.textContent = kpis.active_orders || 0;
+
+    const ratingEl = document.getElementById("kpiAvgRating");
+    if (ratingEl) ratingEl.textContent = `★ ${kpis.average_rating || 5.0}`;
+
+    const sentPctEl = document.getElementById("kpiSentimentPct");
+    if (sentPctEl) sentPctEl.textContent = `${kpis.positive_sentiment_pct || 100}% positive`;
+
+    const aovEl = document.getElementById("kpiAov");
+    if (aovEl) aovEl.textContent = `$${(kpis.avg_order_value || 0).toFixed(2)}`;
+
+    // 2. Hourly Cafe Rush Bar Chart
+    const hourlyEl = document.getElementById("hourlyChartContainer");
+    if (hourlyEl && data.hourly_trend) {
+      const hours = Object.keys(data.hourly_trend);
+      const counts = Object.values(data.hourly_trend);
+      const maxH = Math.max(...counts, 1);
+      let peakHour = "09:00";
+      let peakVal = 0;
+
+      hours.forEach((h, i) => {
+        if (counts[i] >= peakVal) {
+          peakVal = counts[i];
+          peakHour = h;
+        }
+      });
+
+      const peakBadge = document.getElementById("peakRushBadge");
+      if (peakBadge) {
+        peakBadge.textContent = `🔥 Peak: ${peakHour} (${peakVal} cups)`;
+      }
+
+      hourlyEl.innerHTML = hours.map((h, i) => {
+        const cnt = counts[i];
+        const barHeight = Math.max((cnt / maxH) * 85, 8);
+        const isPeak = cnt === peakVal && peakVal > 0;
+        return `
+          <div style="flex: 1; display: flex; flex-direction: column; align-items: center; height: 100%; justify-content: flex-end; gap: 4px;">
+            <span style="font-size: 0.65rem; color: ${isPeak ? 'var(--accent-gold)' : 'var(--text-muted)'}; font-weight: 700;">${cnt}</span>
+            <div style="width: 75%; max-width: 28px; height: ${barHeight}px; border-radius: 4px 4px 0 0; background: ${isPeak ? 'linear-gradient(180deg, var(--accent-gold), #d97706)' : 'rgba(255,255,255,0.15)'}; transition: height 0.5s ease; box-shadow: ${isPeak ? '0 0 10px rgba(226,168,92,0.4)' : 'none'};"></div>
+            <span style="font-size: 0.65rem; color: var(--text-muted); margin-top: 4px;">${h}</span>
+          </div>
+        `;
+      }).join("");
+    }
+
+    // 3. Category Sales Share
+    const catEl = document.getElementById("categoryChartContainer");
+    if (catEl && data.category_distribution) {
+      const cats = Object.entries(data.category_distribution);
+      const totalCat = cats.reduce((acc, c) => acc + c[1], 0) || 1;
+      catEl.innerHTML = cats.map(([catName, cnt]) => {
+        const pct = Math.round((cnt / totalCat) * 100);
+        return `
+          <div>
+            <div style="display: flex; justify-content: space-between; font-size: 0.75rem; margin-bottom: 0.2rem;">
+              <span>${catName}</span>
+              <strong style="color: var(--accent-gold);">${cnt} cups (${pct}%)</strong>
+            </div>
+            <div style="background: rgba(255,255,255,0.06); height: 5px; border-radius: 9999px; overflow: hidden;">
+              <div style="background: linear-gradient(90deg, var(--accent-gold), #d97706); height: 100%; width: ${pct}%;"></div>
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    // 4. Milk Preferences Segmented Bar
+    const milkEl = document.getElementById("milkChartContainer");
+    const milkLeg = document.getElementById("milkLegend");
+    if (milkEl && data.milk_distribution) {
+      const milkEntries = Object.entries(data.milk_distribution);
+      const totalMilk = milkEntries.reduce((a, b) => a + b[1], 0) || 1;
+      const colors = { "Oat Milk": "#e2a85c", "Whole Milk": "#3b82f6", "Almond Milk": "#10b981", "Black / None": "#8b5cf6" };
+
+      milkEl.innerHTML = milkEntries.map(([mName, mCnt]) => {
+        const pct = (mCnt / totalMilk) * 100;
+        if (pct === 0) return "";
+        return `<div style="height: 100%; width: ${pct}%; background: ${colors[mName] || '#fff'};" title="${mName}: ${mCnt} (${Math.round(pct)}%)"></div>`;
+      }).join("");
+
+      if (milkLeg) {
+        milkLeg.innerHTML = milkEntries.map(([mName, mCnt]) => {
+          const pct = Math.round((mCnt / totalMilk) * 100);
+          return `<span style="display: inline-flex; align-items: center; gap: 3px;"><span style="display:inline-block; width:6px; height:6px; border-radius:50%; background:${colors[mName] || '#fff'};"></span> ${mName} (${pct}%)</span>`;
+        }).join("");
+      }
+    }
+
+    // 5. Temperature Preference
+    const tempEl = document.getElementById("tempChartContainer");
+    const tempLeg = document.getElementById("tempLegend");
+    if (tempEl && data.temperature_distribution) {
+      const tempEntries = Object.entries(data.temperature_distribution);
+      const totalTemp = tempEntries.reduce((a, b) => a + b[1], 0) || 1;
+      const tempColors = { "Hot": "#f59e0b", "Iced": "#06b6d4" };
+
+      tempEl.innerHTML = tempEntries.map(([tName, tCnt]) => {
+        const pct = (tCnt / totalTemp) * 100;
+        if (pct === 0) return "";
+        return `<div style="height: 100%; width: ${pct}%; background: ${tempColors[tName] || '#fff'};" title="${tName}: ${tCnt} (${Math.round(pct)}%)"></div>`;
+      }).join("");
+
+      if (tempLeg) {
+        tempLeg.innerHTML = tempEntries.map(([tName, tCnt]) => {
+          const pct = Math.round((tCnt / totalTemp) * 100);
+          return `<span style="display: inline-flex; align-items: center; gap: 3px;"><span style="display:inline-block; width:6px; height:6px; border-radius:50%; background:${tempColors[tName] || '#fff'};"></span> ${tName} (${pct}%)</span>`;
+        }).join("");
+      }
+    }
+
+    // 6. Top 5 Drinks
     const topDrinksEl = document.getElementById("analyticsTopDrinks");
     if (topDrinksEl) {
       if (!data.top_drinks || data.top_drinks.length === 0) {
         topDrinksEl.innerHTML = `<span style="font-size: 0.8rem; color: var(--text-muted);">No sales data recorded yet. Place orders to populate roastery insights!</span>`;
       } else {
         const maxSold = Math.max(...data.top_drinks.map(d => d.sold), 1);
-        topDrinksEl.innerHTML = data.top_drinks.map(d => `
-          <div style="margin-bottom: 0.4rem;">
-            <div style="display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 0.2rem;">
-              <strong>${d.name}</strong>
-              <span style="color: var(--accent-gold); font-weight: 700;">${d.sold} cups</span>
+        topDrinksEl.innerHTML = data.top_drinks.map((d, idx) => `
+          <div>
+            <div style="display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 0.2rem;">
+              <span><strong>#${idx + 1}</strong> ${d.name}</span>
+              <strong style="color: var(--accent-gold);">${d.sold} cups</strong>
             </div>
-            <div style="background: rgba(255,255,255,0.08); height: 6px; border-radius: 9999px; overflow: hidden;">
+            <div style="background: rgba(255,255,255,0.06); height: 5px; border-radius: 9999px; overflow: hidden;">
               <div style="background: linear-gradient(90deg, var(--accent-gold), #d97706); height: 100%; width: ${(d.sold / maxSold) * 100}%;"></div>
             </div>
           </div>
@@ -807,21 +921,21 @@ async function loadAnalyticsData() {
       }
     }
 
-    // Feedback list
+    // 7. Recent Customer Feedback & Gemini AI Sentiment
     const feedbackListEl = document.getElementById("analyticsFeedbackList");
     if (feedbackListEl) {
       if (!data.recent_feedbacks || data.recent_feedbacks.length === 0) {
         feedbackListEl.innerHTML = `<span style="font-size: 0.8rem; color: var(--text-muted);">No taste feedback received yet. Submit feedback after receiving drinks to see Gemini sentiment!</span>`;
       } else {
         feedbackListEl.innerHTML = data.recent_feedbacks.map(f => `
-          <div style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.05); border-radius: 10px; padding: 0.75rem;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
-              <span style="color: var(--accent-gold); font-weight: 800; font-size: 0.85rem;">${'★'.repeat(f.rating)}${'☆'.repeat(5 - f.rating)}</span>
-              <span style="font-size: 0.75rem; color: var(--text-muted);">${f.order_id}</span>
+          <div style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.05); border-radius: 10px; padding: 0.65rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.2rem;">
+              <span style="color: var(--accent-gold); font-weight: 800; font-size: 0.8rem;">${'★'.repeat(f.rating)}${'☆'.repeat(5 - f.rating)}</span>
+              <span style="font-size: 0.7rem; color: var(--text-muted);">${f.order_id}</span>
             </div>
-            ${f.comment ? `<p style="font-size: 0.8rem; color: #fff; margin-bottom: 0.35rem;">"${f.comment}"</p>` : ""}
+            ${f.comment ? `<p style="font-size: 0.75rem; color: #fff; margin-bottom: 0.25rem;">"${f.comment}"</p>` : ""}
             ${f.ai_sentiment_summary ? `
-              <div style="background: rgba(226, 168, 92, 0.08); border-left: 2px solid var(--accent-gold); padding: 0.4rem 0.6rem; border-radius: 0 6px 6px 0; font-size: 0.75rem; color: #fef3c7;">
+              <div style="background: rgba(226, 168, 92, 0.08); border-left: 2px solid var(--accent-gold); padding: 0.35rem 0.5rem; border-radius: 0 4px 4px 0; font-size: 0.7rem; color: #fef3c7;">
                 <strong>Gemini Analysis:</strong> ${f.ai_sentiment_summary}
               </div>
             ` : ""}

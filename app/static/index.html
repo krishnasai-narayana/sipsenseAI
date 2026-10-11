@@ -432,53 +432,122 @@
 
   <!-- Cafe Manager & AI Operations Analytics Modal -->
   <div id="analyticsModal" class="modal-overlay">
-    <div class="modal-card" style="max-width: 720px;">
+    <div class="modal-card" style="max-width: 860px; max-height: 92vh;">
       <div class="modal-header">
         <div>
-          <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--accent-gold); font-weight: 800;">Business & Sensory Intelligence</span>
-          <h3 style="font-size: 1.35rem; font-weight: 900;">Roastery Operations & AI Insights</h3>
+          <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <span style="font-size: 1.2rem;">📊</span>
+            <h3 style="font-size: 1.35rem; font-weight: 900;">Roastery Business & Sensory Intelligence</h3>
+          </div>
+          <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;">Real-time sales, hourly rush charts, and consumer taste analytics</p>
         </div>
         <div style="display: flex; gap: 0.5rem; align-items: center;">
-          <button class="nav-btn" style="padding: 0.35rem 0.75rem; font-size: 0.75rem;" onclick="loadAnalyticsData()">↻ Refresh</button>
+          <button class="nav-btn" style="padding: 0.35rem 0.75rem; font-size: 0.75rem;" onclick="loadAnalyticsData()">↻ Refresh Live</button>
           <button class="modal-close" onclick="closeModal('analyticsModal')">✕</button>
         </div>
       </div>
-      <div class="modal-body">
-        <!-- KPI Cards -->
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 0.85rem; margin-bottom: 1.5rem;" id="analyticsKpiGrid">
-          <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: 12px; padding: 1rem; text-align: center;">
-            <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">Total Orders</span>
-            <div id="kpiTotalOrders" style="font-size: 1.6rem; font-weight: 900; color: #fff; margin-top: 0.2rem;">--</div>
+      <div class="modal-body" style="padding: 1.25rem;">
+        
+        <!-- Top Executive KPI Grid -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.75rem; margin-bottom: 1.25rem;">
+          <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: 12px; padding: 0.9rem; text-align: center;">
+            <span style="font-size: 0.7rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">Total Revenue</span>
+            <div id="kpiRevenue" style="font-size: 1.5rem; font-weight: 900; color: var(--accent-gold); margin-top: 0.2rem;">$0.00</div>
+            <span id="kpiTodayRev" style="font-size: 0.7rem; color: #10b981;">+$0.00 today</span>
           </div>
-          <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: 12px; padding: 1rem; text-align: center;">
-            <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">Active in Queue</span>
-            <div id="kpiActiveOrders" style="font-size: 1.6rem; font-weight: 900; color: #3b82f6; margin-top: 0.2rem;">--</div>
+          <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: 12px; padding: 0.9rem; text-align: center;">
+            <span style="font-size: 0.7rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">Cups Brewed</span>
+            <div id="kpiTotalOrders" style="font-size: 1.5rem; font-weight: 900; color: #fff; margin-top: 0.2rem;">0</div>
+            <span id="kpiCompletedPct" style="font-size: 0.7rem; color: var(--text-muted);">100% completed</span>
           </div>
-          <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: 12px; padding: 1rem; text-align: center;">
-            <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">Avg Taste Rating</span>
-            <div id="kpiAvgRating" style="font-size: 1.6rem; font-weight: 900; color: var(--accent-gold); margin-top: 0.2rem;">--</div>
+          <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: 12px; padding: 0.9rem; text-align: center;">
+            <span style="font-size: 0.7rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">Active in Queue</span>
+            <div id="kpiActiveOrders" style="font-size: 1.5rem; font-weight: 900; color: #3b82f6; margin-top: 0.2rem;">0</div>
+            <span style="font-size: 0.7rem; color: #3b82f6;">Live stations</span>
           </div>
-          <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: 12px; padding: 1rem; text-align: center;">
-            <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">Customer Reviews</span>
-            <div id="kpiTotalReviews" style="font-size: 1.6rem; font-weight: 900; color: #10b981; margin-top: 0.2rem;">--</div>
+          <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: 12px; padding: 0.9rem; text-align: center;">
+            <span style="font-size: 0.7rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">Avg Taste Rating</span>
+            <div id="kpiAvgRating" style="font-size: 1.5rem; font-weight: 900; color: #f59e0b; margin-top: 0.2rem;">★ 5.0</div>
+            <span id="kpiSentimentPct" style="font-size: 0.7rem; color: #10b981;">100% positive</span>
+          </div>
+          <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: 12px; padding: 0.9rem; text-align: center;">
+            <span style="font-size: 0.7rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">Avg Ticket Size</span>
+            <div id="kpiAov" style="font-size: 1.5rem; font-weight: 900; color: #fff; margin-top: 0.2rem;">$0.00</div>
+            <span style="font-size: 0.7rem; color: var(--text-muted);">per order</span>
           </div>
         </div>
 
-        <!-- Top Selling Drinks -->
-        <div style="margin-bottom: 1.5rem; background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: 14px; padding: 1.25rem;">
-          <h4 style="font-size: 0.95rem; font-weight: 800; margin-bottom: 0.75rem; color: var(--text-main);">☕ Top Selling Artisanal Roasts</h4>
-          <div id="analyticsTopDrinks" style="display: flex; flex-direction: column; gap: 0.5rem;">
-            <span style="font-size: 0.8rem; color: var(--text-muted);">Loading sales rankings...</span>
+        <!-- Visual Chart: Hourly Cafe Rush Trend -->
+        <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: 14px; padding: 1.1rem; margin-bottom: 1.25rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.85rem;">
+            <div>
+              <h4 style="font-size: 0.95rem; font-weight: 800; color: var(--text-main);">📈 Hourly Cafe Rush & Order Volume</h4>
+              <p style="font-size: 0.75rem; color: var(--text-muted);">Order frequency across operating hours</p>
+            </div>
+            <span id="peakRushBadge" style="background: rgba(226, 168, 92, 0.15); border: 1px solid rgba(226, 168, 92, 0.3); color: var(--accent-gold); padding: 0.2rem 0.6rem; border-radius: 9999px; font-size: 0.7rem; font-weight: 700;">
+              🔥 Peak: 09:00 - 10:00 AM
+            </span>
+          </div>
+          <!-- Bar Chart Container -->
+          <div id="hourlyChartContainer" style="display: flex; align-items: flex-end; justify-content: space-between; gap: 0.5rem; height: 110px; padding-top: 15px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+            <!-- Rendered dynamically by loadAnalyticsData -->
           </div>
         </div>
 
-        <!-- Recent Customer Feedback & Gemini AI Sentiment -->
-        <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: 14px; padding: 1.25rem;">
-          <h4 style="font-size: 0.95rem; font-weight: 800; margin-bottom: 0.75rem; color: var(--text-main);">🧠 Gemini AI Customer Sentiment Intelligence</h4>
-          <div id="analyticsFeedbackList" style="display: flex; flex-direction: column; gap: 0.75rem;">
-            <span style="font-size: 0.8rem; color: var(--text-muted);">Loading customer sentiment...</span>
+        <!-- 2-Column Visual Breakdown: Category Distribution & Sensory Preferences -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1rem; margin-bottom: 1.25rem;">
+          
+          <!-- Roast & Category Breakdown -->
+          <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: 14px; padding: 1.1rem;">
+            <h4 style="font-size: 0.9rem; font-weight: 800; margin-bottom: 0.75rem; color: var(--text-main);">☕ Category Sales Share</h4>
+            <div id="categoryChartContainer" style="display: flex; flex-direction: column; gap: 0.5rem;">
+              <!-- Rendered dynamically -->
+            </div>
           </div>
+
+          <!-- Sensory Preferences (Milk, Temperature & Sweetness) -->
+          <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: 14px; padding: 1.1rem;">
+            <h4 style="font-size: 0.9rem; font-weight: 800; margin-bottom: 0.75rem; color: var(--text-main);">🥛 Milk & Temperature Preferences</h4>
+            <div style="margin-bottom: 0.85rem;">
+              <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Milk Alternatives</span>
+              <div id="milkChartContainer" style="display: flex; gap: 0.35rem; height: 18px; margin-top: 0.35rem; border-radius: 4px; overflow: hidden; background: rgba(255,255,255,0.05);">
+                <!-- Rendered dynamically -->
+              </div>
+              <div id="milkLegend" style="display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--text-muted); margin-top: 0.35rem;"></div>
+            </div>
+
+            <div>
+              <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Temperature Preference</span>
+              <div id="tempChartContainer" style="display: flex; gap: 0.35rem; height: 18px; margin-top: 0.35rem; border-radius: 4px; overflow: hidden; background: rgba(255,255,255,0.05);">
+                <!-- Rendered dynamically -->
+              </div>
+              <div id="tempLegend" style="display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--text-muted); margin-top: 0.35rem;"></div>
+            </div>
+          </div>
+
         </div>
+
+        <!-- 2-Column: Top Selling Roasts & Gemini Customer Sentiment Feed -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1rem;">
+          
+          <!-- Top Selling Drinks Ranking -->
+          <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: 14px; padding: 1.1rem;">
+            <h4 style="font-size: 0.9rem; font-weight: 800; margin-bottom: 0.75rem; color: var(--text-main);">🏆 Top 5 Roastery Offerings</h4>
+            <div id="analyticsTopDrinks" style="display: flex; flex-direction: column; gap: 0.6rem;">
+              <!-- Dynamic -->
+            </div>
+          </div>
+
+          <!-- Customer Sentiment & Rating Feed -->
+          <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: 14px; padding: 1.1rem;">
+            <h4 style="font-size: 0.9rem; font-weight: 800; margin-bottom: 0.75rem; color: var(--text-main);">🧠 Gemini AI Customer Sentiment Feed</h4>
+            <div id="analyticsFeedbackList" style="display: flex; flex-direction: column; gap: 0.75rem; max-height: 250px; overflow-y: auto;">
+              <!-- Dynamic -->
+            </div>
+          </div>
+
+        </div>
+
       </div>
     </div>
   </div>
