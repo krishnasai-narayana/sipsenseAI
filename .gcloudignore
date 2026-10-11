@@ -1,0 +1,11 @@
+.gcloudignore
+.git
+.gitignore
+.venv
+venv
+.env
+sa-key.json
+cloud-sql-proxy.exe
+cloud-sql-proxy
+*.log
+__pycache__
