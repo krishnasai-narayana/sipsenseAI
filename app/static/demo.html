@@ -1,0 +1,1754 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SipSense AI — Interactive Showcase (Online & Offline)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #0b0c10;
+      --bg-surface: #12141a;
+      --bg-card: #181b22;
+      --bg-glass: rgba(24, 27, 34, 0.75);
+      --accent-gold: #e2a85c;
+      --accent-gold-hover: #f0bd7a;
+      --accent-bronze: #8c5b33;
+      --accent-crema: #fdf6ec;
+      --border-color: rgba(255, 255, 255, 0.08);
+      --border-glow: rgba(226, 168, 92, 0.35);
+      --text-main: #f3f4f6;
+      --text-muted: #9ca3af;
+      --status-received: #3b82f6;
+      --status-brewing: #f59e0b;
+      --status-ready: #10b981;
+      --status-completed: #6b7280;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg-dark);
+      color: var(--text-main);
+      line-height: 1.5;
+      overflow-x: hidden;
+      min-height: 100vh;
+      background-image: 
+        radial-gradient(circle at 15% 15%, rgba(226, 168, 92, 0.07) 0%, transparent 40%),
+        radial-gradient(circle at 85% 85%, rgba(140, 91, 51, 0.08) 0%, transparent 45%);
+    }
+
+    /* Top Live Queue Banner */
+    .queue-ticker {
+      background: linear-gradient(90deg, #181410, #221a14, #181410);
+      border-bottom: 1px solid rgba(226, 168, 92, 0.25);
+      padding: 0.5rem 1.5rem;
+      font-size: 0.8rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: var(--accent-crema);
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .ticker-pulse {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #10b981;
+      box-shadow: 0 0 8px #10b981;
+      margin-right: 0.5rem;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.9); }
+    }
+
+    .mode-switch-btn {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.15);
+      color: #fff;
+      padding: 0.25rem 0.65rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      transition: all 0.2s;
+    }
+    .mode-switch-btn:hover {
+      background: rgba(226, 168, 92, 0.2);
+      border-color: var(--accent-gold);
+    }
+
+    /* Main Navigation */
+    .header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(14px);
+      background: rgba(11, 12, 16, 0.85);
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 2rem;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      text-decoration: none;
+      cursor: pointer;
+    }
+    .brand-icon {
+      width: 42px;
+      height: 42px;
+      background: linear-gradient(135deg, var(--accent-gold), var(--accent-bronze));
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+      box-shadow: 0 4px 14px rgba(226, 168, 92, 0.3);
+    }
+    .brand-name {
+      font-size: 1.4rem;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      color: #fff;
+    }
+    .brand-badge {
+      background: rgba(226, 168, 92, 0.15);
+      color: var(--accent-gold);
+      border: 1px solid rgba(226, 168, 92, 0.3);
+      padding: 0.1rem 0.5rem;
+      border-radius: 9999px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+    }
+
+    .nav-btn {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      padding: 0.6rem 1.1rem;
+      border-radius: 10px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .nav-btn:hover {
+      background: rgba(255,255,255,0.08);
+      border-color: rgba(255,255,255,0.2);
+      transform: translateY(-1px);
+    }
+    .nav-btn.primary {
+      background: linear-gradient(135deg, var(--accent-gold), #d97706);
+      color: #0b0c10;
+      border: none;
+      font-weight: 700;
+      box-shadow: 0 4px 15px rgba(226, 168, 92, 0.25);
+    }
+    .nav-btn.primary:hover {
+      box-shadow: 0 6px 20px rgba(226, 168, 92, 0.4);
+      transform: translateY(-2px);
+    }
+
+    .cart-btn {
+      position: relative;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 0.6rem 0.9rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      font-size: 1.1rem;
+      transition: all 0.2s;
+    }
+    .cart-count {
+      position: absolute;
+      top: -6px;
+      right: -6px;
+      background: #ef4444;
+      color: #fff;
+      font-size: 0.7rem;
+      font-weight: 800;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+    }
+
+    /* Container */
+    .container {
+      max-width: 1240px;
+      margin: 0 auto;
+      padding: 2.5rem 1.5rem;
+    }
+
+    /* Hero */
+    .hero {
+      text-align: center;
+      margin-bottom: 3rem;
+    }
+    .hero-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: rgba(226, 168, 92, 0.12);
+      border: 1px solid rgba(226, 168, 92, 0.25);
+      color: var(--accent-gold);
+      padding: 0.35rem 0.85rem;
+      border-radius: 9999px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      margin-bottom: 1.25rem;
+    }
+    .hero-title {
+      font-size: 3rem;
+      font-weight: 900;
+      letter-spacing: -1px;
+      line-height: 1.15;
+      margin-bottom: 1rem;
+    }
+    .hero-title span {
+      background: linear-gradient(135deg, var(--accent-gold), #fef3c7);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .hero-subtitle {
+      max-width: 680px;
+      margin: 0 auto 2rem;
+      color: var(--text-muted);
+      font-size: 1.05rem;
+    }
+
+    /* AI Sensory Search */
+    .search-wrapper {
+      max-width: 720px;
+      margin: 0 auto 2.5rem;
+      position: relative;
+      display: flex;
+      align-items: center;
+      background: var(--bg-card);
+      border: 1px solid var(--border-glow);
+      border-radius: 9999px;
+      padding: 0.4rem 0.5rem 0.4rem 1.5rem;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    }
+    .search-input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: #fff;
+      font-family: inherit;
+      font-size: 0.95rem;
+      outline: none;
+    }
+    .search-btn {
+      background: linear-gradient(135deg, var(--accent-gold), #d97706);
+      color: #0b0c10;
+      border: none;
+      padding: 0.75rem 1.6rem;
+      border-radius: 9999px;
+      font-weight: 700;
+      font-family: inherit;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: all 0.2s;
+    }
+    .search-btn:hover {
+      box-shadow: 0 4px 15px rgba(226, 168, 92, 0.4);
+      transform: scale(1.02);
+    }
+
+    /* Category Filter Pills */
+    .category-pills {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+      margin-bottom: 2.5rem;
+    }
+    .pill-btn {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      color: var(--text-muted);
+      padding: 0.5rem 1.1rem;
+      border-radius: 9999px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .pill-btn:hover {
+      color: #fff;
+      border-color: rgba(255,255,255,0.2);
+    }
+    .pill-btn.active {
+      background: rgba(226, 168, 92, 0.15);
+      border-color: var(--accent-gold);
+      color: var(--accent-gold);
+      font-weight: 700;
+    }
+
+    /* AI Sommelier Flight Panel */
+    .ai-results-panel {
+      display: none;
+      background: linear-gradient(180deg, rgba(226, 168, 92, 0.08), rgba(24, 27, 34, 0.95));
+      border: 1px solid rgba(226, 168, 92, 0.4);
+      border-radius: 20px;
+      padding: 2rem;
+      margin-bottom: 3.5rem;
+      box-shadow: 0 15px 35px rgba(0,0,0,0.4);
+      position: relative;
+    }
+    .ai-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.25rem;
+    }
+    .ai-title-wrap {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+    }
+    .ai-icon-badge {
+      width: 36px;
+      height: 36px;
+      background: var(--accent-gold);
+      color: #0b0c10;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      font-weight: 800;
+    }
+    .ai-sommelier-note {
+      font-style: italic;
+      color: #fde68a;
+      background: rgba(245, 158, 11, 0.1);
+      border-left: 3px solid var(--accent-gold);
+      padding: 0.8rem 1.2rem;
+      border-radius: 0 10px 10px 0;
+      margin-bottom: 1.5rem;
+      font-size: 0.95rem;
+    }
+    .ai-cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 1.5rem;
+    }
+    .ai-match-card {
+      background: var(--bg-surface);
+      border: 1px solid rgba(226, 168, 92, 0.3);
+      border-radius: 16px;
+      padding: 1.4rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .match-tag {
+      background: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      padding: 0.2rem 0.5rem;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+    .barista-tip-box {
+      background: rgba(0,0,0,0.3);
+      border: 1px dashed rgba(226, 168, 92, 0.3);
+      border-radius: 8px;
+      padding: 0.6rem 0.8rem;
+      font-size: 0.8rem;
+      margin: 0.8rem 0;
+      color: #fef3c7;
+    }
+
+    /* Menu Grid */
+    .menu-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1.8rem;
+    }
+    .menu-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 18px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .menu-card:hover {
+      transform: translateY(-5px);
+      border-color: rgba(226, 168, 92, 0.4);
+      box-shadow: 0 12px 30px rgba(0,0,0,0.5);
+    }
+    .card-image-wrap {
+      position: relative;
+      width: 100%;
+      height: 190px;
+      overflow: hidden;
+    }
+    .card-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.5s ease;
+    }
+    .menu-card:hover .card-img {
+      transform: scale(1.06);
+    }
+    .badge-temp {
+      position: absolute;
+      bottom: 10px;
+      left: 10px;
+      background: rgba(11, 12, 16, 0.85);
+      backdrop-filter: blur(8px);
+      padding: 0.2rem 0.6rem;
+      border-radius: 6px;
+      font-size: 0.7rem;
+      font-weight: 600;
+    }
+    .badge-featured {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: linear-gradient(135deg, var(--accent-gold), #d97706);
+      color: #0b0c10;
+      padding: 0.2rem 0.6rem;
+      border-radius: 9999px;
+      font-size: 0.7rem;
+      font-weight: 800;
+    }
+    .card-body {
+      padding: 1.3rem;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      justify-content: space-between;
+    }
+    .card-title {
+      font-size: 1.15rem;
+      font-weight: 800;
+      margin-bottom: 0.35rem;
+    }
+    .card-desc {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      line-height: 1.4;
+      margin-bottom: 1rem;
+    }
+    .flavor-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+      margin-bottom: 1.25rem;
+    }
+    .flavor-tag {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 0.15rem 0.5rem;
+      border-radius: 6px;
+      font-size: 0.7rem;
+      color: #d1d5db;
+    }
+    .card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-top: 1px solid var(--border-color);
+      padding-top: 1rem;
+    }
+    .price {
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: #fff;
+    }
+    .btn-add {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      color: #fff;
+      padding: 0.5rem 0.9rem;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-add:hover {
+      background: var(--accent-gold);
+      color: #0b0c10;
+      border-color: var(--accent-gold);
+    }
+
+    /* Modal Overlay & Card */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(8px);
+      z-index: 200;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+    .modal-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-glow);
+      border-radius: 20px;
+      max-width: 540px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.7);
+      animation: modalSlide 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes modalSlide {
+      from { opacity: 0; transform: translateY(20px) scale(0.97); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .modal-header {
+      padding: 1.25rem 1.5rem;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .modal-close {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 1.4rem;
+      cursor: pointer;
+      line-height: 1;
+    }
+    .modal-close:hover { color: #fff; }
+    .modal-body {
+      padding: 1.5rem;
+    }
+    .form-group {
+      margin-bottom: 1.25rem;
+    }
+    .form-label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #d1d5db;
+      margin-bottom: 0.4rem;
+    }
+    .select-input, .text-input {
+      width: 100%;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      color: #fff;
+      padding: 0.65rem 0.85rem;
+      border-radius: 10px;
+      font-family: inherit;
+      font-size: 0.9rem;
+      outline: none;
+    }
+    .select-input:focus, .text-input:focus {
+      border-color: var(--accent-gold);
+    }
+
+    /* Cart Items list */
+    .cart-item {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 0.85rem;
+      margin-bottom: 0.75rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    /* Barista Board Columns */
+    .kanban-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1.25rem;
+      margin-top: 1rem;
+    }
+    .kanban-col {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      padding: 1rem;
+    }
+    .kanban-title {
+      font-size: 0.9rem;
+      font-weight: 800;
+      margin-bottom: 0.85rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .ticket-card {
+      background: var(--bg-card);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 10px;
+      padding: 0.85rem;
+      margin-bottom: 0.75rem;
+    }
+
+    /* Floating Chat Button */
+    .floating-chat-btn {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      width: 58px;
+      height: 58px;
+      background: linear-gradient(135deg, var(--accent-gold), #d97706);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.6rem;
+      cursor: pointer;
+      box-shadow: 0 10px 25px rgba(226, 168, 92, 0.4);
+      z-index: 150;
+      transition: transform 0.2s;
+    }
+    .floating-chat-btn:hover {
+      transform: scale(1.08);
+    }
+
+    /* Floating Chat Drawer */
+    .chat-drawer {
+      position: fixed;
+      bottom: 95px;
+      right: 24px;
+      width: 360px;
+      max-width: 90vw;
+      height: 480px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-glow);
+      border-radius: 18px;
+      display: none;
+      flex-direction: column;
+      z-index: 150;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.7);
+    }
+    .chat-body {
+      flex: 1;
+      padding: 1rem;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+    .chat-bubble {
+      max-width: 85%;
+      padding: 0.65rem 0.9rem;
+      border-radius: 12px;
+      font-size: 0.85rem;
+      line-height: 1.4;
+    }
+    .chat-bubble.bot {
+      background: var(--bg-surface);
+      border: 1px solid rgba(226, 168, 92, 0.2);
+      color: #f3f4f6;
+      align-self: flex-start;
+    }
+    .chat-bubble.user {
+      background: var(--accent-gold);
+      color: #0b0c10;
+      font-weight: 600;
+      align-self: flex-end;
+    }
+
+    /* Toast */
+    #demoToast {
+      position: fixed;
+      top: 80px;
+      right: 24px;
+      background: linear-gradient(135deg, var(--accent-gold), #d97706);
+      color: #0b0c10;
+      font-weight: 700;
+      padding: 0.85rem 1.4rem;
+      border-radius: 9999px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.9rem;
+      transform: translateY(-20px);
+      opacity: 0;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      pointer-events: none;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .header { padding: 0.8rem 1rem; }
+      .hero-title { font-size: 2.1rem; }
+      .header-actions .nav-btn span:last-child { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Ticker -->
+  <div class="queue-ticker">
+    <div>
+      <span class="ticker-pulse"></span>
+      <strong>Barista Station Live:</strong> Handcrafting single-origin roasts & nitrogen infusions
+    </div>
+    <div style="display: flex; gap: 0.8rem; align-items: center;">
+      <span id="backendBadge">Engine: <strong style="color: #10b981;">Offline Interactive Engine</strong></span>
+      <button class="mode-switch-btn" onclick="toggleEngineMode()">
+        <span id="modeIcon">🌐</span> <span id="modeText">Switch to Cloud Run API</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Header -->
+  <header class="header">
+    <div class="brand" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">
+      <div class="brand-icon">☕</div>
+      <div>
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+          <span class="brand-name">SipSense</span>
+          <span class="brand-badge">AI 2.0</span>
+        </div>
+        <p style="font-size: 0.7rem; color: var(--text-muted); margin-top: -3px;">Specialty Roastery & Sensory Lab</p>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <button class="nav-btn primary" onclick="openModal('matchmakerModal')">
+        <span>✨</span> <span>Find My Sip</span>
+      </button>
+      <button class="nav-btn" onclick="openModal('orderTrackModal')" id="navTrackerBtn">
+        <span>📍</span> <span>Track Order</span>
+      </button>
+      <button class="nav-btn" onclick="openModal('baristaModal')">
+        <span>📋</span> <span>Barista Board</span>
+      </button>
+      <div class="cart-btn" onclick="openModal('cartModal')" title="View Order">
+        🛒
+        <span class="cart-count" id="cartCount">0</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Container -->
+  <main class="container">
+
+    <!-- Hero -->
+    <section class="hero">
+      <div class="hero-tag">
+        <span>✦</span> Powered by Gemini 2.5 Flash & Google Cloud SQL
+      </div>
+      <h1 class="hero-title">
+        Coffee crafted for your <span>exact taste chemistry</span>.
+      </h1>
+      <p class="hero-subtitle">
+        Scan your QR code, express your morning craving, or let our AI Sommelier tailor an artisanal single-origin pour, nitro cold brew, or velvet latte just for you.
+      </p>
+
+      <!-- Search Bar -->
+      <div class="search-wrapper">
+        <input 
+          type="text" 
+          id="cravingInput" 
+          class="search-input" 
+          placeholder="E.g. 'Craving something smooth with oat milk, hazelnut notes and low acid'..."
+        />
+        <button class="search-btn" onclick="triggerCravingSearch()">
+          <span>✨</span> Ask Gemini
+        </button>
+      </div>
+
+      <!-- Category Filter Pills -->
+      <div class="category-pills">
+        <button class="pill-btn active" data-cat="All" onclick="filterCategory('All', this)">All Roasts & Brews</button>
+        <button class="pill-btn" data-cat="Cold Brew" onclick="filterCategory('Cold Brew', this)">Cold Brew</button>
+        <button class="pill-btn" data-cat="Espresso" onclick="filterCategory('Espresso', this)">Espresso</button>
+        <button class="pill-btn" data-cat="Specialty" onclick="filterCategory('Specialty', this)">Specialty</button>
+        <button class="pill-btn" data-cat="Pour Over" onclick="filterCategory('Pour Over', this)">Pour Over</button>
+        <button class="pill-btn" data-cat="Latte & Macchiato" onclick="filterCategory('Latte & Macchiato', this)">Lattes & Macchiatos</button>
+      </div>
+    </section>
+
+    <!-- AI Personalized Recommendations Panel -->
+    <section id="aiResultsPanel" class="ai-results-panel">
+      <div class="ai-header">
+        <div class="ai-title-wrap">
+          <div class="ai-icon-badge">✨</div>
+          <div>
+            <h3 style="font-size: 1.25rem; font-weight: 800; color: var(--text-main);">Gemini AI Sommelier Tasting Flight</h3>
+            <p style="font-size: 0.8rem; color: var(--text-muted);">Curated specifically for your flavor parameters</p>
+          </div>
+        </div>
+        <button class="modal-close" onclick="document.getElementById('aiResultsPanel').style.display='none'">✕</button>
+      </div>
+      <p id="aiSommelierNote" class="ai-sommelier-note"></p>
+      <div id="aiCardsGrid" class="ai-cards-grid"></div>
+    </section>
+
+    <!-- Menu Section Header -->
+    <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 1.25rem;">
+      <div>
+        <h2 style="font-size: 1.6rem; font-weight: 800;">Curated Cafe Catalog</h2>
+        <p style="font-size: 0.85rem; color: var(--text-muted);">Small-batch ethical roasts, house-made botanicals & nitro taps</p>
+      </div>
+      <span style="font-size: 0.8rem; color: var(--accent-gold); font-weight: 600;">100% Arabica & Heirloom Varieties</span>
+    </div>
+
+    <!-- Drink Catalog Grid -->
+    <div id="menuGrid" class="menu-grid"></div>
+
+  </main>
+
+  <!-- Drink Customizer Modal -->
+  <div id="customizerModal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div>
+          <div style="display: flex; align-items: baseline; gap: 0.6rem;">
+            <h3 id="custItemName" style="font-size: 1.25rem; font-weight: 800;">Customize Drink</h3>
+            <span id="custBasePrice" style="font-size: 0.95rem; font-weight: 800; color: var(--accent-gold);">$0.00</span>
+          </div>
+          <p id="custItemDesc" style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;"></p>
+        </div>
+        <button class="modal-close" onclick="closeModal('customizerModal')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Milk / Dairy Alternative</label>
+          <select id="custMilk" class="select-input"></select>
+        </div>
+
+        <div class="form-group">
+          <div style="display: flex; justify-content: space-between;">
+            <label class="form-label">Sweetness Level</label>
+            <span id="custSweetnessVal" style="font-size: 0.85rem; font-weight: 800; color: var(--accent-gold);">2/5</span>
+          </div>
+          <input type="range" id="custSweetness" min="0" max="5" value="2" style="width: 100%; accent-color: var(--accent-gold);" oninput="document.getElementById('custSweetnessVal').textContent = this.value + '/5'" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Serving Temperature</label>
+          <select id="custTemp" class="select-input">
+            <option value="Hot">Hot (Velvet Texture)</option>
+            <option value="Iced">Iced (Over Clear Cubes)</option>
+            <option value="Extra Ice">Extra Iced</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Extra Espresso Shots (+$0.75 / shot)</label>
+          <select id="custShots" class="select-input" onchange="calculateCustomPrice()">
+            <option value="0">Standard Extraction</option>
+            <option value="1">+1 Extra Ristretto Shot (+$0.75)</option>
+            <option value="2">+2 Double Boost (+$1.50)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Barista Notes (e.g. oat milk extra hot)</label>
+          <input type="text" id="custNotes" class="text-input" placeholder="Any special preparation preference..." />
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+          <div>
+            <span style="font-size: 0.8rem; color: var(--text-muted);">Total with Customizations</span>
+            <div id="custTotalPrice" style="font-size: 1.4rem; font-weight: 800; color: var(--accent-gold);">$0.00</div>
+          </div>
+          <button class="nav-btn primary" style="padding: 0.75rem 1.5rem; font-size: 0.95rem;" onclick="addCustomizedToCart()">
+            Add to Cup ☕
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cart / Checkout Drawer -->
+  <div id="cartModal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 style="font-size: 1.25rem; font-weight: 800;">Your Coffee Cup</h3>
+        <button class="modal-close" onclick="closeModal('cartModal')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div id="cartItemsList"></div>
+
+        <div style="margin: 1.5rem 0 1rem;">
+          <div class="form-group">
+            <label class="form-label">Customer Name</label>
+            <input type="text" id="orderCustomerName" class="text-input" placeholder="E.g. Alex M." value="Coffee Aficionado" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Mobile Number (Optional SMS alert)</label>
+            <input type="tel" id="orderCustomerPhone" class="text-input" placeholder="+1 (555) 000-0000" />
+          </div>
+        </div>
+
+        <div style="border-top: 1px solid var(--border-color); padding-top: 1rem; margin-bottom: 1.5rem;">
+          <div style="display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 0.4rem;">
+            <span style="color: var(--text-muted);">Subtotal</span>
+            <span id="cartSubtotal" style="font-weight: 600;">$0.00</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 0.6rem;">
+            <span style="color: var(--text-muted);">Artisanal Tax (8%)</span>
+            <span id="cartTax" style="font-weight: 600;">$0.00</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; font-size: 1.3rem; font-weight: 800;">
+            <span>Total</span>
+            <span id="cartTotal" style="color: var(--accent-gold);">$0.00</span>
+          </div>
+        </div>
+
+        <button class="nav-btn primary" style="width: 100%; justify-content: center; padding: 0.9rem; font-size: 1rem;" onclick="checkoutOrder()">
+          Send to Barista Station 🚀
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Order Tracker Modal -->
+  <div id="orderTrackModal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 style="font-size: 1.25rem; font-weight: 800;">Live Coffee Tracker</h3>
+        <button class="modal-close" onclick="closeModal('orderTrackModal')">✕</button>
+      </div>
+      <div class="modal-body" id="trackerBody">
+        <p style="color: var(--text-muted); text-align: center; padding: 2rem 0;">No active order placed yet. Add a drink to your cup to track it!</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Barista Board Modal -->
+  <div id="baristaModal" class="modal-overlay">
+    <div class="modal-card" style="max-width: 800px;">
+      <div class="modal-header">
+        <div>
+          <h3 style="font-size: 1.25rem; font-weight: 800;">Barista Production Station</h3>
+          <p style="font-size: 0.8rem; color: var(--text-muted);">Real-time dispatch board for espresso pulls & nitro taps</p>
+        </div>
+        <button class="modal-close" onclick="closeModal('baristaModal')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="kanban-grid">
+          <div class="kanban-col">
+            <div class="kanban-title"><span style="color: var(--status-received);">● Received</span> <span id="countReceived">1</span></div>
+            <div id="colReceived"></div>
+          </div>
+          <div class="kanban-col">
+            <div class="kanban-title"><span style="color: var(--status-brewing);">● Brewing</span> <span id="countBrewing">1</span></div>
+            <div id="colBrewing"></div>
+          </div>
+          <div class="kanban-col">
+            <div class="kanban-title"><span style="color: var(--status-ready);">● Ready</span> <span id="countReady">1</span></div>
+            <div id="colReady"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Find My Sip Sensory Matchmaker Modal -->
+  <div id="matchmakerModal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 style="font-size: 1.25rem; font-weight: 800;">✨ Find My Sip Matchmaker</h3>
+        <button class="modal-close" onclick="closeModal('matchmakerModal')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">1. Preferred Roast Profile</label>
+          <select id="quizRoast" class="select-input">
+            <option value="Any">Surprise Me (Any Roast)</option>
+            <option value="Light">Light (Floral, Tea-like, High Acidity)</option>
+            <option value="Medium">Medium (Balanced, Caramel, Toffee)</option>
+            <option value="Dark">Dark (Bold, Smoky, Low Acidity, Cocoa)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">2. Dairy or Botanical Preference</label>
+          <select id="quizMilk" class="select-input">
+            <option value="Oat Milk">Oat Milk (Velvety, Naturally Sweet)</option>
+            <option value="Whole Milk">Whole Milk (Rich Micro-foam)</option>
+            <option value="Almond Milk">Almond Milk (Nutty & Light)</option>
+            <option value="Black">Black / Pure Espresso (No Milk)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">3. Flavor Notes You Love</label>
+          <select id="quizFlavor" class="select-input">
+            <option value="Citrus & Jasmine">Citrus & Jasmine</option>
+            <option value="Brown Sugar & Cinnamon">Brown Sugar & Cinnamon</option>
+            <option value="Dark Cocoa & Hazelnut">Dark Cocoa & Hazelnut</option>
+            <option value="Pistachio & Sea Salt">Pistachio & Sea Salt</option>
+            <option value="Vanilla Sweet Cream">Vanilla Sweet Cream</option>
+          </select>
+        </div>
+        <button class="nav-btn primary" style="width: 100%; justify-content: center; padding: 0.85rem; margin-top: 1rem;" onclick="runQuizMatchmaker()">
+          Curate My Sensory Match ✨
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Floating Chat Assistant -->
+  <div class="floating-chat-btn" onclick="toggleChat()" title="Ask AI Coffee Sommelier">💬</div>
+  <div id="chatDrawer" class="chat-drawer">
+    <div class="modal-header" style="padding: 0.85rem 1.2rem;">
+      <div style="display: flex; align-items: center; gap: 0.5rem;">
+        <span style="font-size: 1.2rem;">✨</span>
+        <strong>Gemini AI Sommelier</strong>
+      </div>
+      <button class="modal-close" onclick="toggleChat()">✕</button>
+    </div>
+    <div id="chatMessages" class="chat-body">
+      <div class="chat-bubble bot">
+        Welcome to SipSense! I'm your Gemini AI Coffee Sommelier. Tell me your taste preferences or ask about any roast on our menu!
+      </div>
+    </div>
+    <div style="padding: 0.75rem; border-top: 1px solid var(--border-color); display: flex; gap: 0.4rem;">
+      <input type="text" id="chatInput" class="text-input" placeholder="Ask about roast notes, caffeine..." onkeydown="if(event.key==='Enter') sendChat()" />
+      <button class="btn-add" style="background: var(--accent-gold); color: #0b0c10;" onclick="sendChat()">Send</button>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="demoToast"></div>
+
+  <!-- Embedded Catalog & Engine Script -->
+  <script>
+    // 10 Artisanal Drinks Database (Offline & Fallback)
+    const MOCK_MENU = [
+      {
+        id: 1,
+        name: "Yirgacheffe Citrus Pour Over",
+        category: "Pour Over",
+        description: "Washed heirloom Ethiopian beans with brilliant bergamot aroma, jasmine blossom, and crisp Meyer lemon acidity.",
+        price: 5.50,
+        image_url: "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=600&q=80",
+        flavor_notes: ["Bergamot", "Jasmine", "Meyer Lemon"],
+        roast_level: "Light",
+        caffeine_level: "Medium",
+        acidity: "High",
+        sweetness_level: 2,
+        temperature_default: "Hot",
+        milk_options: ["None", "Oat Milk"],
+        is_featured: true
+      },
+      {
+        id: 2,
+        name: "Brown Sugar Shaken Espresso",
+        category: "Espresso",
+        description: "Blonde espresso vigorously shaken with rich demerara brown sugar, Saigon cinnamon, and topped with silky oat milk.",
+        price: 5.75,
+        image_url: "https://images.unsplash.com/photo-1517701604599-bb29b565090c?auto=format&fit=crop&w=600&q=80",
+        flavor_notes: ["Brown Sugar", "Saigon Cinnamon", "Oat Mellow"],
+        roast_level: "Medium",
+        caffeine_level: "High",
+        acidity: "Low",
+        sweetness_level: 3,
+        temperature_default: "Iced",
+        milk_options: ["Oat Milk", "Almond Milk", "Whole Milk"],
+        is_featured: true
+      },
+      {
+        id: 3,
+        name: "Nitro Cold Brew with Vanilla Sweet Cream",
+        category: "Cold Brew",
+        description: "Dark-roasted micro-lot steeped for 20 hours, infused with nitrogen for a Guinness-like cascade and vanilla foam.",
+        price: 5.95,
+        image_url: "https://images.unsplash.com/photo-1461023058943-07fcbe16d735?auto=format&fit=crop&w=600&q=80",
+        flavor_notes: ["Bourbon Vanilla", "Dark Cocoa", "Molasses"],
+        roast_level: "Dark",
+        caffeine_level: "Very High",
+        acidity: "Low",
+        sweetness_level: 2,
+        temperature_default: "Iced",
+        milk_options: ["Sweet Cream", "Oat Milk Foam", "None"],
+        is_featured: true
+      },
+      {
+        id: 4,
+        name: "Cardamom & Rose Botanical Latte",
+        category: "Specialty",
+        description: "Double ristretto married with fresh crushed green cardamom pods, Damascus rose water syrup, and steamed oat milk.",
+        price: 6.25,
+        image_url: "https://images.unsplash.com/photo-1572442388796-11668a67e53d?auto=format&fit=crop&w=600&q=80",
+        flavor_notes: ["Green Cardamom", "Rose Water", "Pistachio Dust"],
+        roast_level: "Medium",
+        caffeine_level: "Medium",
+        acidity: "Low",
+        sweetness_level: 3,
+        temperature_default: "Hot",
+        milk_options: ["Oat Milk", "Whole Milk", "Almond Milk"],
+        is_featured: true
+      },
+      {
+        id: 5,
+        name: "Velvet Flat White",
+        category: "Espresso",
+        description: "Expertly pulled double shot of Brazilian medium roast folded into glossy, velvety textured micro-foam.",
+        price: 4.95,
+        image_url: "https://images.unsplash.com/photo-1577968897966-3d4325b36b61?auto=format&fit=crop&w=600&q=80",
+        flavor_notes: ["Roasted Hazelnut", "Caramelized Malt", "Dark Chocolate"],
+        roast_level: "Medium",
+        caffeine_level: "High",
+        acidity: "Medium",
+        sweetness_level: 1,
+        temperature_default: "Hot",
+        milk_options: ["Whole Milk", "Oat Milk", "Almond Milk"],
+        is_featured: false
+      },
+      {
+        id: 6,
+        name: "Kyoto Style Slow-Drip Cold Brew",
+        category: "Cold Brew",
+        description: "Extracted drop by single drop through an ornate glass tower over 14 hours. Unmatched clarity with zero bitterness.",
+        price: 6.50,
+        image_url: "https://images.unsplash.com/photo-1517256064527-09c73fc73e38?auto=format&fit=crop&w=600&q=80",
+        flavor_notes: ["Whiskey Oak", "Black Cherry", "Dark Chocolate"],
+        roast_level: "Medium-Dark",
+        caffeine_level: "Very High",
+        acidity: "Low",
+        sweetness_level: 1,
+        temperature_default: "Iced",
+        milk_options: ["None", "Oat Milk"],
+        is_featured: false
+      },
+      {
+        id: 7,
+        name: "Panama Geisha Natural Reserve",
+        category: "Pour Over",
+        description: "Legendary rare varietal cultivated at 1,700m in Boquete. Bursting with passion fruit, papaya, and sweet honey.",
+        price: 9.50,
+        image_url: "https://images.unsplash.com/photo-1497636577773-f1231844b336?auto=format&fit=crop&w=600&q=80",
+        flavor_notes: ["Passion Fruit", "Papaya", "Orange Blossom Honey"],
+        roast_level: "Light",
+        caffeine_level: "Medium",
+        acidity: "Very High",
+        sweetness_level: 3,
+        temperature_default: "Hot",
+        milk_options: ["None"],
+        is_featured: true
+      },
+      {
+        id: 8,
+        name: "Spanish Smoked Honey Cortado",
+        category: "Espresso",
+        description: "Equal parts espresso and warm milk cut with wildflower honey infused with smoked Spanish paprika.",
+        price: 5.25,
+        image_url: "https://images.unsplash.com/photo-1534778101976-62847782c213?auto=format&fit=crop&w=600&q=80",
+        flavor_notes: ["Wild Honey", "Smoky Warmth", "Nutmeg"],
+        roast_level: "Dark",
+        caffeine_level: "Medium",
+        acidity: "Low",
+        sweetness_level: 2,
+        temperature_default: "Hot",
+        milk_options: ["Whole Milk", "Oat Milk"],
+        is_featured: false
+      },
+      {
+        id: 9,
+        name: "Sea Salt Caramel Macchiato",
+        category: "Latte & Macchiato",
+        description: "Freshly steamed vanilla milk marked with double espresso shots and drizzled with Brittany fleur de sel caramel.",
+        price: 5.85,
+        image_url: "https://images.unsplash.com/photo-1485808191679-5f86510681a2?auto=format&fit=crop&w=600&q=80",
+        flavor_notes: ["Fleur de Sel", "Warm Caramel", "Vanilla Bean"],
+        roast_level: "Medium",
+        caffeine_level: "Medium",
+        acidity: "Low",
+        sweetness_level: 4,
+        temperature_default: "Hot",
+        milk_options: ["Whole Milk", "Oat Milk", "Almond Milk"],
+        is_featured: false
+      },
+      {
+        id: 10,
+        name: "Cascara Sparkling Botanical Spritz",
+        category: "Specialty",
+        description: "Sun-dried coffee cherry husk brewed into a revitalizing tea, blended with blood orange reduction and effervescent soda.",
+        price: 5.45,
+        image_url: "https://images.unsplash.com/photo-1551024709-8f23befc6f87?auto=format&fit=crop&w=600&q=80",
+        flavor_notes: ["Hibiscus", "Blood Orange", "Tamarind"],
+        roast_level: "None (Cascara)",
+        caffeine_level: "Low",
+        acidity: "Medium",
+        sweetness_level: 2,
+        temperature_default: "Iced",
+        milk_options: ["None"],
+        is_featured: false
+      }
+    ];
+
+    // State Variables
+    let isCloudRunMode = false;
+    const CLOUD_RUN_API_BASE = "https://sipsense-app-239920603011.asia-south1.run.app";
+    let activeCatalog = [...MOCK_MENU];
+    let cart = [];
+    let currentCustomizingItem = null;
+    let activeOrder = null;
+    let mockBaristaTickets = [
+      { id: "ORD-9281", name: "Alex K.", drink: "Brown Sugar Shaken Espresso", custom: "Oat Milk, Extra Iced", status: "Brewing" },
+      { id: "ORD-9282", name: "Elena R.", drink: "Velvet Flat White", custom: "Whole Milk, Extra Shot", status: "Ready" },
+      { id: "ORD-9283", name: "Marcus P.", drink: "Yirgacheffe Pour Over", custom: "Black, Hot", status: "Received" }
+    ];
+
+    // Engine Toggle
+    function toggleEngineMode() {
+      isCloudRunMode = !isCloudRunMode;
+      const badge = document.getElementById("backendBadge");
+      const text = document.getElementById("modeText");
+      const icon = document.getElementById("modeIcon");
+
+      if (isCloudRunMode) {
+        badge.innerHTML = 'Engine: <strong style="color: #60a5fa;">Cloud Run Live API</strong>';
+        text.textContent = "Switch to Offline Demo";
+        icon.textContent = "💻";
+        showToast("Connected to live Cloud Run service!");
+        fetchCloudRunMenu();
+      } else {
+        badge.innerHTML = 'Engine: <strong style="color: #10b981;">Offline Interactive Engine</strong>';
+        text.textContent = "Switch to Cloud Run API";
+        icon.textContent = "🌐";
+        activeCatalog = [...MOCK_MENU];
+        renderMenuGrid(activeCatalog);
+        showToast("Switched to Offline Interactive mode");
+      }
+    }
+
+    async function fetchCloudRunMenu() {
+      try {
+        const res = await fetch(`${CLOUD_RUN_API_BASE}/api/menu`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.length) {
+            activeCatalog = data;
+            renderMenuGrid(activeCatalog);
+            return;
+          }
+        }
+      } catch (e) {
+        console.warn("Cloud Run API unreachable, falling back to embedded catalog:", e);
+      }
+      activeCatalog = [...MOCK_MENU];
+      renderMenuGrid(activeCatalog);
+    }
+
+    // Render Menu
+    function renderMenuGrid(items) {
+      const grid = document.getElementById("menuGrid");
+      if (!grid) return;
+      if (items.length === 0) {
+        grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 3rem; color: var(--text-muted);">No drinks found in this category.</div>';
+        return;
+      }
+      grid.innerHTML = items.map(item => `
+        <div class="menu-card">
+          <div class="card-image-wrap">
+            <img class="card-img" src="${item.image_url}" alt="${item.name}" loading="lazy" />
+            ${item.is_featured ? `<span class="badge-featured">★ Signature</span>` : ""}
+            <span class="badge-temp">${item.temperature_default} • ${item.roast_level}</span>
+          </div>
+          <div class="card-body">
+            <div>
+              <h3 class="card-title">${item.name}</h3>
+              <p class="card-desc">${item.description}</p>
+              <div class="flavor-tags">
+                ${(item.flavor_notes || []).map(f => `<span class="flavor-tag">#${f}</span>`).join("")}
+              </div>
+            </div>
+            <div class="card-footer">
+              <span class="price">$${parseFloat(item.price).toFixed(2)}</span>
+              <div style="display: flex; gap: 0.4rem; align-items: center;">
+                <button class="btn-add" onclick="openCustomizer(${item.id})">⚙ Customize</button>
+                <button class="btn-add" style="background: rgba(226, 168, 92, 0.2); color: var(--accent-gold); border-color: var(--accent-gold);" onclick="quickAddToCart(${item.id})">+ Cup</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    function filterCategory(cat, el) {
+      document.querySelectorAll(".pill-btn").forEach(b => b.classList.remove("active"));
+      if (el) el.classList.add("active");
+      if (cat === "All") {
+        renderMenuGrid(activeCatalog);
+      } else {
+        const filtered = activeCatalog.filter(m => m.category === cat);
+        renderMenuGrid(filtered);
+      }
+    }
+
+    // Modal helpers
+    function openModal(id) {
+      const m = document.getElementById(id);
+      if (m) m.style.display = "flex";
+      if (id === "cartModal") renderCartItems();
+      if (id === "baristaModal") renderBaristaBoard();
+    }
+    function closeModal(id) {
+      const m = document.getElementById(id);
+      if (m) m.style.display = "none";
+    }
+
+    // Drink Customizer
+    function openCustomizer(itemId) {
+      const item = activeCatalog.find(m => m.id == itemId) || MOCK_MENU.find(m => m.id == itemId);
+      if (!item) return;
+      currentCustomizingItem = item;
+
+      document.getElementById("custItemName").textContent = item.name;
+      document.getElementById("custItemDesc").textContent = item.description;
+      document.getElementById("custBasePrice").textContent = `$${parseFloat(item.price).toFixed(2)}`;
+
+      const milkSelect = document.getElementById("custMilk");
+      const milks = (item.milk_options && item.milk_options.length) ? item.milk_options : ["Whole Milk", "Oat Milk", "Almond Milk", "None"];
+      milkSelect.innerHTML = milks.map(m => `<option value="${m}">${m}</option>`).join("");
+
+      document.getElementById("custSweetness").value = item.sweetness_level || 2;
+      document.getElementById("custSweetnessVal").textContent = `${item.sweetness_level || 2}/5`;
+      document.getElementById("custTemp").value = item.temperature_default || "Hot";
+      document.getElementById("custShots").value = "0";
+      document.getElementById("custNotes").value = "";
+
+      calculateCustomPrice();
+      openModal("customizerModal");
+    }
+
+    function calculateCustomPrice() {
+      if (!currentCustomizingItem) return;
+      const base = parseFloat(currentCustomizingItem.price) || 0;
+      const extraShots = parseInt(document.getElementById("custShots").value || "0");
+      const total = base + (extraShots * 0.75);
+      document.getElementById("custTotalPrice").textContent = `$${total.toFixed(2)}`;
+    }
+
+    function addCustomizedToCart() {
+      if (!currentCustomizingItem) return;
+      const extraShots = parseInt(document.getElementById("custShots").value || "0");
+      const basePrice = parseFloat(currentCustomizingItem.price) || 0;
+      const itemPrice = basePrice + (extraShots * 0.75);
+
+      cart.push({
+        id: currentCustomizingItem.id,
+        name: currentCustomizingItem.name,
+        price: itemPrice,
+        milk: document.getElementById("custMilk").value,
+        sweetness: `${document.getElementById("custSweetness").value}/5`,
+        temperature: document.getElementById("custTemp").value,
+        extra_shots: extraShots,
+        notes: document.getElementById("custNotes").value
+      });
+
+      updateCartBadge();
+      closeModal("customizerModal");
+      showToast(`☕ Added customized "${currentCustomizingItem.name}" to your cup!`);
+      openModal("cartModal");
+    }
+
+    function quickAddToCart(itemId) {
+      const item = activeCatalog.find(m => m.id == itemId) || MOCK_MENU.find(m => m.id == itemId);
+      if (!item) return;
+
+      cart.push({
+        id: item.id,
+        name: item.name,
+        price: parseFloat(item.price) || 5.0,
+        milk: (item.milk_options && item.milk_options[0]) || "Whole Milk",
+        sweetness: `${item.sweetness_level || 2}/5`,
+        temperature: item.temperature_default || "Hot",
+        extra_shots: 0,
+        notes: "Barista Standard"
+      });
+
+      updateCartBadge();
+      showToast(`⚡ Added "${item.name}" to your cup!`);
+      openModal("cartModal");
+    }
+
+    function updateCartBadge() {
+      document.getElementById("cartCount").textContent = cart.length;
+    }
+
+    // Cart Management
+    function renderCartItems() {
+      const container = document.getElementById("cartItemsList");
+      if (cart.length === 0) {
+        container.innerHTML = '<p style="text-align: center; color: var(--text-muted); padding: 2rem 0;">Your cup is empty. Explore our coffee collection above!</p>';
+        document.getElementById("cartSubtotal").textContent = "$0.00";
+        document.getElementById("cartTax").textContent = "$0.00";
+        document.getElementById("cartTotal").textContent = "$0.00";
+        return;
+      }
+
+      let subtotal = 0;
+      container.innerHTML = cart.map((item, idx) => {
+        subtotal += item.price;
+        return `
+          <div class="cart-item">
+            <div>
+              <strong style="font-size: 0.95rem; display: block;">${item.name}</strong>
+              <span style="font-size: 0.75rem; color: var(--text-muted);">${item.milk} • ${item.sweetness} Sweet • ${item.temperature}${item.extra_shots ? ` • +${item.extra_shots} Shot` : ""}</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+              <span style="font-weight: 700; color: var(--accent-gold);">$${item.price.toFixed(2)}</span>
+              <button onclick="removeCartItem(${idx})" style="background: none; border: none; color: #ef4444; cursor: pointer; font-size: 1rem;">✕</button>
+            </div>
+          </div>
+        `;
+      }).join("");
+
+      const tax = subtotal * 0.08;
+      const total = subtotal + tax;
+      document.getElementById("cartSubtotal").textContent = `$${subtotal.toFixed(2)}`;
+      document.getElementById("cartTax").textContent = `$${tax.toFixed(2)}`;
+      document.getElementById("cartTotal").textContent = `$${total.toFixed(2)}`;
+    }
+
+    function removeCartItem(idx) {
+      cart.splice(idx, 1);
+      updateCartBadge();
+      renderCartItems();
+    }
+
+    function checkoutOrder() {
+      if (cart.length === 0) {
+        alert("Please add at least one coffee to your cup before sending to the barista!");
+        return;
+      }
+      const customerName = document.getElementById("orderCustomerName").value.trim() || "Guest Explorer";
+      const orderId = "ORD-" + Math.floor(1000 + Math.random() * 9000);
+
+      activeOrder = {
+        orderId,
+        customerName,
+        items: [...cart],
+        status: "Received",
+        step: 1
+      };
+
+      // Add to barista queue
+      mockBaristaTickets.unshift({
+        id: orderId,
+        name: customerName,
+        drink: cart[0].name,
+        custom: `${cart[0].milk}, ${cart[0].temperature}`,
+        status: "Received"
+      });
+
+      cart = [];
+      updateCartBadge();
+      closeModal("cartModal");
+      showToast(`🎉 Order #${orderId} sent to barista!`);
+      updateTrackerView();
+      openModal("orderTrackModal");
+    }
+
+    // Order Tracker
+    function updateTrackerView() {
+      const body = document.getElementById("trackerBody");
+      if (!activeOrder) {
+        body.innerHTML = '<p style="color: var(--text-muted); text-align: center; padding: 2rem 0;">No active order placed yet.</p>';
+        return;
+      }
+
+      const steps = [
+        { label: "Order Received", desc: "Sent to Barista station queue" },
+        { label: "Grinding & Dosing", desc: "Measuring single-origin beans" },
+        { label: "Pulling Shot & Steaming", desc: "Crafting velvety micro-foam" },
+        { label: "Ready at Barista Counter", desc: "Pick up your freshly brewed cup!" }
+      ];
+
+      body.innerHTML = `
+        <div style="background: rgba(226, 168, 92, 0.1); border: 1px solid rgba(226, 168, 92, 0.3); border-radius: 12px; padding: 1rem; margin-bottom: 1.5rem; text-align: center;">
+          <h4 style="font-size: 1.1rem; color: var(--accent-gold);">Ticket #${activeOrder.orderId}</h4>
+          <p style="font-size: 0.85rem; color: #fff;">Customer: <strong>${activeOrder.customerName}</strong></p>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 1rem;">
+          ${steps.map((st, i) => {
+            const isDone = (i + 1) <= activeOrder.step;
+            const isCurrent = (i + 1) === activeOrder.step;
+            return `
+              <div style="display: flex; align-items: center; gap: 1rem;">
+                <div style="width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.85rem; background: ${isDone ? 'var(--accent-gold)' : 'var(--bg-surface)'}; color: ${isDone ? '#0b0c10' : 'var(--text-muted)'}; border: 1px solid ${isDone ? 'var(--accent-gold)' : 'var(--border-color)'};">
+                  ${isDone ? '✓' : i + 1}
+                </div>
+                <div>
+                  <strong style="color: ${isCurrent ? 'var(--accent-gold)' : (isDone ? '#fff' : 'var(--text-muted)')}; font-size: 0.95rem;">${st.label}</strong>
+                  <p style="font-size: 0.75rem; color: var(--text-muted);">${st.desc}</p>
+                </div>
+              </div>
+            `;
+          }).join("")}
+        </div>
+        <button class="btn-add" style="margin-top: 1.5rem; width: 100%;" onclick="advanceOrderStep()">
+          Advance Barista Progress (Simulate Live Brew) ➔
+        </button>
+      `;
+    }
+
+    function advanceOrderStep() {
+      if (!activeOrder) return;
+      if (activeOrder.step < 4) {
+        activeOrder.step++;
+        if (activeOrder.step === 2) activeOrder.status = "Brewing";
+        if (activeOrder.step === 4) activeOrder.status = "Ready";
+
+        // update in mockBaristaTickets
+        const ticket = mockBaristaTickets.find(t => t.id === activeOrder.orderId);
+        if (ticket) ticket.status = activeOrder.status;
+
+        updateTrackerView();
+        showToast(`Barista status: ${activeOrder.status}!`);
+      } else {
+        showToast("Drink is already ready at the counter! Enjoy your sip ☕");
+      }
+    }
+
+    // Barista Board
+    function renderBaristaBoard() {
+      const received = mockBaristaTickets.filter(t => t.status === "Received");
+      const brewing = mockBaristaTickets.filter(t => t.status === "Brewing");
+      const ready = mockBaristaTickets.filter(t => t.status === "Ready");
+
+      document.getElementById("countReceived").textContent = received.length;
+      document.getElementById("countBrewing").textContent = brewing.length;
+      document.getElementById("countReady").textContent = ready.length;
+
+      const renderTicket = (t) => `
+        <div class="ticket-card">
+          <div style="display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 0.3rem;">
+            <strong>${t.id}</strong>
+            <span style="color: var(--accent-gold);">${t.name}</span>
+          </div>
+          <p style="font-size: 0.85rem; font-weight: 700; color: #fff;">${t.drink}</p>
+          <p style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.5rem;">${t.custom}</p>
+          <div style="display: flex; gap: 0.3rem;">
+            ${t.status === 'Received' ? `<button class="btn-add" style="padding: 0.2rem 0.5rem; font-size: 0.7rem;" onclick="updateTicketStatus('${t.id}', 'Brewing')">Start Brew</button>` : ''}
+            ${t.status === 'Brewing' ? `<button class="btn-add" style="padding: 0.2rem 0.5rem; font-size: 0.7rem; background: var(--status-ready); color: #fff;" onclick="updateTicketStatus('${t.id}', 'Ready')">Mark Ready</button>` : ''}
+            ${t.status === 'Ready' ? `<button class="btn-add" style="padding: 0.2rem 0.5rem; font-size: 0.7rem;" onclick="updateTicketStatus('${t.id}', 'Completed')">Complete</button>` : ''}
+          </div>
+        </div>
+      `;
+
+      document.getElementById("colReceived").innerHTML = received.map(renderTicket).join("") || '<p style="font-size: 0.75rem; color: var(--text-muted);">None in queue</p>';
+      document.getElementById("colBrewing").innerHTML = brewing.map(renderTicket).join("") || '<p style="font-size: 0.75rem; color: var(--text-muted);">No active brews</p>';
+      document.getElementById("colReady").innerHTML = ready.map(renderTicket).join("") || '<p style="font-size: 0.75rem; color: var(--text-muted);">No drinks ready</p>';
+    }
+
+    function updateTicketStatus(id, newStatus) {
+      if (newStatus === "Completed") {
+        mockBaristaTickets = mockBaristaTickets.filter(t => t.id !== id);
+      } else {
+        const ticket = mockBaristaTickets.find(t => t.id === id);
+        if (ticket) ticket.status = newStatus;
+      }
+      renderBaristaBoard();
+      showToast(`Ticket ${id} updated to ${newStatus}`);
+    }
+
+    // AI Craving Search Simulation
+    async function triggerCravingSearch() {
+      const q = document.getElementById("cravingInput").value.trim();
+      if (!q) {
+        showToast("Please enter a craving or flavor desire first!");
+        return;
+      }
+
+      showToast("Consulting Gemini AI Sommelier...");
+
+      if (isCloudRunMode) {
+        try {
+          const res = await fetch(`${CLOUD_RUN_API_BASE}/api/recommendations/craving`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ craving_text: q })
+          });
+          if (res.ok) {
+            const data = await res.json();
+            renderAiPanel(data.sommelier_note, data.recommendations);
+            return;
+          }
+        } catch (e) {
+          console.warn("API call failed, running local sommelier logic:", e);
+        }
+      }
+
+      // Offline Sensory Matcher Simulation
+      setTimeout(() => {
+        let matched = [];
+        let note = "";
+        const lower = q.toLowerCase();
+
+        if (lower.includes("oat") || lower.includes("sweet") || lower.includes("caramel")) {
+          matched = [
+            { ...MOCK_MENU[1], match_score: 98, barista_tweak: "Crafted specifically for oat milk lovers with caramelized brown sugar" },
+            { ...MOCK_MENU[2], match_score: 95, barista_tweak: "Ask for Oat Milk Sweet Cream for a silky, plant-based cascade" },
+            { ...MOCK_MENU[4], match_score: 92, barista_tweak: "Order with velvety oat milk for a comforting nutty finish" }
+          ];
+          note = "Based on your craving for smooth oat textures and delicate sweetness, I've curated espresso and nitrogen cold brew options balancing rich malt notes with luscious sweetness.";
+        } else if (lower.includes("acid") || lower.includes("citrus") || lower.includes("pour over") || lower.includes("fruit")) {
+          matched = [
+            { ...MOCK_MENU[0], match_score: 99, barista_tweak: "Served at 92°C to highlight the crisp bergamot and jasmine aromatics" },
+            { ...MOCK_MENU[6], match_score: 96, barista_tweak: "Rare Boquete Geisha with unmatched tropical sweetness and papaya clarity" },
+            { ...MOCK_MENU[9], match_score: 90, barista_tweak: "Naturally effervescent with antioxidant coffee cherry sweetness" }
+          ];
+          note = "For bright citrus and floral complexity, these single-origin washed lots deliver radiant brightness without heavy bitterness.";
+        } else {
+          matched = [
+            { ...MOCK_MENU[4], match_score: 96, barista_tweak: "Enjoy as a classic double ristretto flat white for pure espresso depth" },
+            { ...MOCK_MENU[1], match_score: 94, barista_tweak: "Blonde roast keeps the extraction bright and aromatic" },
+            { ...MOCK_MENU[5], match_score: 91, barista_tweak: "14-hour Kyoto drip delivers extreme smoothness and dark cocoa finish" }
+          ];
+          note = "Curated to match your palette with balanced extraction, clean body, and delicate roast sweetness.";
+        }
+
+        renderAiPanel(note, matched);
+      }, 500);
+    }
+
+    function renderAiPanel(note, items) {
+      const panel = document.getElementById("aiResultsPanel");
+      panel.style.display = "block";
+      document.getElementById("aiSommelierNote").textContent = `"${note}"`;
+
+      const grid = document.getElementById("aiCardsGrid");
+      grid.innerHTML = items.map(item => `
+        <div class="ai-match-card">
+          <div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+              <span class="match-tag">★ ${item.match_score || 95}% Match</span>
+              <span style="font-size: 0.75rem; color: var(--text-muted);">${item.category}</span>
+            </div>
+            <h4 style="font-size: 1.15rem; font-weight: 800; margin-bottom: 0.25rem;">${item.name}</h4>
+            <p style="font-size: 0.8rem; color: var(--text-muted);">${item.description}</p>
+            <div class="barista-tip-box">
+              <strong>Barista Tweak:</strong> ${item.barista_tweak || "Crafted to perfection"}
+            </div>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 0.75rem; border-top: 1px solid rgba(255,255,255,0.08);">
+            <span style="font-size: 1.15rem; font-weight: 800;">$${parseFloat(item.price).toFixed(2)}</span>
+            <div style="display: flex; gap: 0.4rem;">
+              <button class="btn-add" style="background: var(--accent-gold); color: #0b0c10; font-weight: 800;" onclick="openCustomizer(${item.id})">⚙ Customize & Add</button>
+              <button class="btn-add" onclick="quickAddToCart(${item.id})">⚡ Quick Add</button>
+            </div>
+          </div>
+        </div>
+      `).join("");
+
+      panel.scrollIntoView({ behavior: "smooth" });
+    }
+
+    // Sensory Quiz
+    function runQuizMatchmaker() {
+      const roast = document.getElementById("quizRoast").value;
+      const milk = document.getElementById("quizMilk").value;
+      const flavor = document.getElementById("quizFlavor").value;
+
+      closeModal("matchmakerModal");
+      showToast("Synthesizing your sensory coffee match...");
+
+      setTimeout(() => {
+        let matched = MOCK_MENU.filter(m => roast === "Any" || m.roast_level.includes(roast));
+        if (matched.length < 3) matched = [...MOCK_MENU.slice(0, 3)];
+
+        renderAiPanel(
+          `Sensory profile matched for ${roast} roast with ${milk} and notes of ${flavor}. Here are your custom-tailored flights.`,
+          matched.slice(0, 3).map((item, idx) => ({
+            ...item,
+            match_score: 98 - (idx * 3),
+            barista_tweak: `Prepared with ${milk} to complement your preferred ${flavor} notes`
+          }))
+        );
+      }, 400);
+    }
+
+    // Chatbot
+    function toggleChat() {
+      const drawer = document.getElementById("chatDrawer");
+      drawer.style.display = drawer.style.display === "flex" ? "none" : "flex";
+    }
+
+    function sendChat() {
+      const input = document.getElementById("chatInput");
+      const text = input.value.trim();
+      if (!text) return;
+      input.value = "";
+
+      const box = document.getElementById("chatMessages");
+      box.innerHTML += `<div class="chat-bubble user">${text}</div>`;
+      box.scrollTop = box.scrollHeight;
+
+      setTimeout(() => {
+        let reply = "Our single-origin coffees are ethically sourced directly from smallholder farms in Ethiopia, Colombia, and Panama. For your taste, I recommend trying our Velvet Flat White with Oat Milk!";
+        const lower = text.toLowerCase();
+        if (lower.includes("caffeine")) {
+          reply = "Looking for high caffeine? Our Nitro Cold Brew steeped for 20 hours delivers ~280mg per glass! If you prefer low caffeine, try our Cascara Botanical Spritz or Spanish Cortado.";
+        } else if (lower.includes("oat milk") || lower.includes("vegan")) {
+          reply = "Our Brown Sugar Shaken Espresso and Velvet Flat White pair brilliantly with steamed oat milk—bringing out natural caramel and roasted hazelnut tones!";
+        } else if (lower.includes("cloud sql") || lower.includes("gemini")) {
+          reply = "SipSense AI uses Google Cloud SQL PostgreSQL 18 for sub-millisecond menu catalog & live queue persistence, and Gemini 2.5 Flash on Vertex AI for taste chemistry discovery!";
+        }
+        box.innerHTML += `<div class="chat-bubble bot">${reply}</div>`;
+        box.scrollTop = box.scrollHeight;
+      }, 500);
+    }
+
+    // Toast
+    function showToast(msg) {
+      const t = document.getElementById("demoToast");
+      t.textContent = msg;
+      t.style.transform = "translateY(0)";
+      t.style.opacity = "1";
+      setTimeout(() => {
+        t.style.transform = "translateY(-20px)";
+        t.style.opacity = "0";
+      }, 2500);
+    }
+
+    // Initial Load
+    document.addEventListener("DOMContentLoaded", () => {
+      renderMenuGrid(activeCatalog);
+    });
+  </script>
+</body>
+</html>
