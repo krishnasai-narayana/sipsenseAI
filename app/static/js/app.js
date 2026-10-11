@@ -35,6 +35,42 @@ function updateCartBadge() {
   if (badge) badge.textContent = count;
 }
 
+// Global Item Registry & AI Recommendations Memory
+const itemRegistry = new Map();
+let currentAiRecommendations = [];
+
+function registerItems(items) {
+  if (!Array.isArray(items)) return;
+  items.forEach(item => {
+    if (item && item.id != null) {
+      itemRegistry.set(Number(item.id), item);
+      itemRegistry.set(String(item.id), item);
+    }
+  });
+}
+
+async function getItem(itemId) {
+  let item = itemRegistry.get(Number(itemId)) || itemRegistry.get(String(itemId));
+  if (!item && menuItems) {
+    item = menuItems.find(m => m.id == itemId);
+  }
+  if (!item && currentAiRecommendations) {
+    item = currentAiRecommendations.find(m => m.id == itemId);
+  }
+  if (!item) {
+    try {
+      const res = await fetch(`/api/menu/${itemId}`);
+      if (res.ok) {
+        item = await res.json();
+        registerItems([item]);
+      }
+    } catch (e) {
+      console.warn("Could not fetch item from API:", e);
+    }
+  }
+  return item;
+}
+
 // Fetch Menu Items
 async function fetchMenu(category = "All", search = "") {
   try {
@@ -42,6 +78,7 @@ async function fetchMenu(category = "All", search = "") {
     if (search) url += `&search=${encodeURIComponent(search)}`;
     const res = await fetch(url);
     menuItems = await res.json();
+    registerItems(menuItems);
     renderMenuGrid(menuItems);
   } catch (err) {
     console.error("Failed to load menu:", err);
@@ -76,10 +113,15 @@ function renderMenuGrid(items) {
           ${(item.flavor_notes || []).map(f => `<span class="flavor-tag">#${f}</span>`).join("")}
         </div>
         <div class="card-footer">
-          <span class="price">$${item.price.toFixed(2)}</span>
-          <button class="btn-add" onclick="openCustomizer(${item.id})">
-            <span>+</span> Customize
-          </button>
+          <span class="price">$${parseFloat(item.price).toFixed(2)}</span>
+          <div style="display: flex; gap: 0.4rem; align-items: center;">
+            <button class="btn-add" onclick="openCustomizer(${item.id})">
+              <span>⚙</span> Customize
+            </button>
+            <button class="btn-add" style="background: rgba(226, 168, 92, 0.18); color: var(--accent-gold); border-color: var(--accent-gold);" onclick="quickAddToCart(${item.id}, event)" title="Add immediately with default recipe">
+              + Cup
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -89,52 +131,78 @@ function renderMenuGrid(items) {
 // Drink Customizer Modal State
 let currentCustomizingItem = null;
 
-function openCustomizer(itemId) {
-  const item = menuItems.find(m => m.id === itemId);
-  if (!item) return;
+async function openCustomizer(itemId) {
+  const item = await getItem(itemId);
+  if (!item) {
+    console.error("Item not found:", itemId);
+    alert("Could not load drink details. Please refresh or try another drink.");
+    return;
+  }
   currentCustomizingItem = item;
 
-  document.getElementById("custItemName").textContent = item.name;
-  document.getElementById("custItemDesc").textContent = item.description;
-  document.getElementById("custBasePrice").textContent = `$${item.price.toFixed(2)}`;
+  const nameEl = document.getElementById("custItemName");
+  if (nameEl) nameEl.textContent = item.name || "Specialty Drink";
+
+  const descEl = document.getElementById("custItemDesc");
+  if (descEl) descEl.textContent = item.description || "";
+
+  const basePriceEl = document.getElementById("custBasePrice");
+  const priceNum = parseFloat(item.price) || 5.00;
+  if (basePriceEl) basePriceEl.textContent = `$${priceNum.toFixed(2)}`;
 
   // Populate Milk options
   const milkSelect = document.getElementById("custMilk");
-  milkSelect.innerHTML = (item.milk_options || ["None"]).map((m, idx) => `
-    <option value="${m}" ${idx === 0 ? "selected" : ""}>${m}</option>
-  `).join("");
+  if (milkSelect) {
+    const milks = (item.milk_options && item.milk_options.length)
+      ? item.milk_options
+      : ["Whole Milk", "Oat Milk", "Almond Milk", "None"];
+    milkSelect.innerHTML = milks.map((m, idx) => `
+      <option value="${m}" ${idx === 0 ? "selected" : ""}>${m}</option>
+    `).join("");
+  }
 
-  // Reset defaults
-  document.getElementById("custSweetness").value = item.sweetness_level || 2;
-  document.getElementById("custSweetnessVal").textContent = `${item.sweetness_level || 2}/5`;
-  document.getElementById("custTemp").value = item.temperature_default || "Hot";
-  document.getElementById("custShots").value = "0";
-  document.getElementById("custNotes").value = "";
+  // Reset defaults safely
+  const sweetEl = document.getElementById("custSweetness");
+  const sweetValEl = document.getElementById("custSweetnessVal");
+  const sweetLvl = item.sweetness_level != null ? item.sweetness_level : 2;
+  if (sweetEl) sweetEl.value = sweetLvl;
+  if (sweetValEl) sweetValEl.textContent = `${sweetLvl}/5`;
+
+  const tempEl = document.getElementById("custTemp");
+  if (tempEl) tempEl.value = item.temperature_default || "Hot";
+
+  const shotsEl = document.getElementById("custShots");
+  if (shotsEl) shotsEl.value = "0";
+
+  const notesEl = document.getElementById("custNotes");
+  if (notesEl) notesEl.value = "";
 
   calculateCustomPrice();
-  document.getElementById("customizerModal").style.display = "flex";
+  openModal("customizerModal");
 }
 
 function calculateCustomPrice() {
   if (!currentCustomizingItem) return;
-  const base = currentCustomizingItem.price;
-  const extraShots = parseInt(document.getElementById("custShots").value || "0");
+  const base = parseFloat(currentCustomizingItem.price) || 0;
+  const extraShots = parseInt(document.getElementById("custShots")?.value || "0");
   const total = base + (extraShots * 0.75);
-  document.getElementById("custTotalPrice").textContent = `$${total.toFixed(2)}`;
+  const totalEl = document.getElementById("custTotalPrice");
+  if (totalEl) totalEl.textContent = `$${total.toFixed(2)}`;
 }
 
 function addCustomizedToCart() {
   if (!currentCustomizingItem) return;
 
-  const extraShots = parseInt(document.getElementById("custShots").value || "0");
-  const itemPrice = currentCustomizingItem.price + (extraShots * 0.75);
+  const extraShots = parseInt(document.getElementById("custShots")?.value || "0");
+  const basePrice = parseFloat(currentCustomizingItem.price) || 0;
+  const itemPrice = basePrice + (extraShots * 0.75);
 
   const customObj = {
-    milk: document.getElementById("custMilk").value,
-    sweetness: `${document.getElementById("custSweetness").value}/5`,
-    temperature: document.getElementById("custTemp").value,
+    milk: document.getElementById("custMilk")?.value || "Whole Milk",
+    sweetness: `${document.getElementById("custSweetness")?.value || 2}/5`,
+    temperature: document.getElementById("custTemp")?.value || "Hot",
     extra_shots: extraShots,
-    notes: document.getElementById("custNotes").value
+    notes: document.getElementById("custNotes")?.value || ""
   };
 
   cart.push({
@@ -142,13 +210,78 @@ function addCustomizedToCart() {
     name: currentCustomizingItem.name,
     unit_price: itemPrice,
     quantity: 1,
-    image_url: currentCustomizingItem.image_url,
+    image_url: currentCustomizingItem.image_url || "",
     customizations: customObj
   });
 
   saveCart();
   closeModal("customizerModal");
+  showToast(`☕ Added customized "${currentCustomizingItem.name}" to your cup!`);
   openCartDrawer();
+}
+
+async function quickAddToCart(itemId, event) {
+  if (event) event.stopPropagation();
+  const item = await getItem(itemId);
+  if (!item) return;
+
+  const defaultMilk = (item.milk_options && item.milk_options[0]) || "Whole Milk";
+  const defaultTemp = item.temperature_default || "Hot";
+  const defaultSweet = `${item.sweetness_level != null ? item.sweetness_level : 2}/5`;
+
+  cart.push({
+    menu_item_id: item.id,
+    name: item.name,
+    unit_price: parseFloat(item.price) || 5.0,
+    quantity: 1,
+    image_url: item.image_url || "",
+    customizations: {
+      milk: defaultMilk,
+      sweetness: defaultSweet,
+      temperature: defaultTemp,
+      extra_shots: 0,
+      notes: ""
+    }
+  });
+
+  saveCart();
+  showToast(`☕ Added "${item.name}" to your cup!`);
+  openCartDrawer();
+}
+
+function showToast(message) {
+  let toast = document.getElementById("sipsenseToast");
+  if (!toast) {
+    toast = document.createElement("div");
+    toast.id = "sipsenseToast";
+    toast.style.cssText = `
+      position: fixed;
+      top: 80px;
+      right: 24px;
+      background: linear-gradient(135deg, #e2a85c, #d97706);
+      color: #0b0c10;
+      font-weight: 700;
+      padding: 0.85rem 1.4rem;
+      border-radius: 9999px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.9rem;
+      transform: translateY(-20px);
+      opacity: 0;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    `;
+    document.body.appendChild(toast);
+  }
+  toast.textContent = message;
+  toast.style.transform = "translateY(0)";
+  toast.style.opacity = "1";
+  setTimeout(() => {
+    toast.style.transform = "translateY(-20px)";
+    toast.style.opacity = "0";
+  }, 2500);
 }
 
 // Cart Drawer
@@ -439,6 +572,9 @@ function renderAiRecommendations(data) {
   panel.style.display = "block";
   document.getElementById("aiSommelierNote").textContent = `"${data.sommelier_note}"`;
 
+  currentAiRecommendations = data.recommendations || [];
+  registerItems(currentAiRecommendations);
+
   const grid = document.getElementById("aiCardsGrid");
   grid.innerHTML = (data.recommendations || []).map(item => `
     <div class="ai-match-card">
@@ -456,11 +592,16 @@ function renderAiRecommendations(data) {
           <strong>Barista Tweak:</strong> ${item.suggested_tweak}
         </div>
       </div>
-      <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 0.75rem; border-top: 1px solid rgba(255,255,255,0.08);">
-        <span style="font-size: 1.15rem; font-weight: 800;">$${item.price.toFixed(2)}</span>
-        <button class="btn-add" onclick="openCustomizer(${item.id})">
-          Customize & Add
-        </button>
+      <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 0.75rem; border-top: 1px solid rgba(255,255,255,0.08); gap: 0.5rem; flex-wrap: wrap;">
+        <span style="font-size: 1.15rem; font-weight: 800;">$${parseFloat(item.price).toFixed(2)}</span>
+        <div style="display: flex; gap: 0.4rem; align-items: center;">
+          <button class="btn-add" style="background: var(--accent-gold); color: #0b0c10; font-weight: 800;" onclick="openCustomizer(${item.id})">
+            ⚙ Customize & Add
+          </button>
+          <button class="btn-add" style="background: rgba(255,255,255,0.08);" onclick="quickAddToCart(${item.id}, event)" title="Add immediately with default recipe">
+            ⚡ Quick Add
+          </button>
+        </div>
       </div>
     </div>
   `).join("");

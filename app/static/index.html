@@ -131,8 +131,11 @@
     <div class="modal-card">
       <div class="modal-header">
         <div>
-          <h3 id="custItemName" style="font-size: 1.25rem; font-weight: 800;">Customize Drink</h3>
-          <p id="custItemDesc" style="font-size: 0.8rem; color: var(--text-muted);"></p>
+          <div style="display: flex; align-items: baseline; gap: 0.6rem;">
+            <h3 id="custItemName" style="font-size: 1.25rem; font-weight: 800;">Customize Drink</h3>
+            <span id="custBasePrice" style="font-size: 0.95rem; font-weight: 800; color: var(--accent-gold);">$0.00</span>
+          </div>
+          <p id="custItemDesc" style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;"></p>
         </div>
         <button class="modal-close" onclick="closeModal('customizerModal')">✕</button>
       </div>
