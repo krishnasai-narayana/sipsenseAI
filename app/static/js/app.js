@@ -355,13 +355,15 @@ async function submitOrder() {
   if (cart.length === 0) return;
   const customerName = document.getElementById("orderCustomerName").value.trim() || "Guest Explorer";
   const customerPhone = document.getElementById("orderCustomerPhone").value.trim() || "";
+  const serviceType = document.getElementById("orderServiceType")?.value || "Takeaway Counter";
   const specialNotes = document.getElementById("orderSpecialNotes").value.trim() || "";
+  const combinedInstructions = `${serviceType}${specialNotes ? " • " + specialNotes : ""}`;
 
   const payload = {
     customer_name: customerName,
     customer_phone: customerPhone,
     session_id: getSessionId(),
-    special_instructions: specialNotes,
+    special_instructions: combinedInstructions,
     items: cart.map(item => ({
       menu_item_id: item.menu_item_id,
       quantity: item.quantity,
@@ -398,6 +400,33 @@ async function submitOrder() {
 }
 
 // Live Order Tracker
+let lastTrackedStatus = null;
+
+function playBaristaChime() {
+  try {
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContextClass) return;
+    const ctx = new AudioContextClass();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(587.33, ctx.currentTime); // D5
+    osc.frequency.exponentialRampToValueAtTime(880.0, ctx.currentTime + 0.3); // A5
+
+    gain.gain.setValueAtTime(0.2, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 1.2);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.start();
+    osc.stop(ctx.currentTime + 1.2);
+  } catch (e) {
+    console.log("Audio notification skipped");
+  }
+}
+
 async function startTrackingOrder(orderId) {
   activeOrder = orderId;
   localStorage.setItem("sipsense_active_order", orderId);
@@ -447,7 +476,14 @@ function renderTrackerUI(order) {
     step2.classList.add("completed");
     step3.classList.add("completed");
     document.getElementById("trackStatusMsg").textContent = "✨ Your drink is ready for pickup at the counter!";
+
+    if (lastTrackedStatus !== "READY" && order.status === "READY") {
+      playBaristaChime();
+      showToast("🔔 Order Ready! Pick up your handcrafted drink at the counter.");
+    }
   }
+
+  lastTrackedStatus = order.status;
 
   // Queue info
   if (order.queue_position > 0) {
@@ -466,6 +502,7 @@ function renderTrackerUI(order) {
   const feedbackSection = document.getElementById("feedbackSection");
   if (order.has_feedback) {
     feedbackSection.innerHTML = `<p style="color: #10b981; font-weight: 700; text-align: center;">✓ Thank you! Your taste feedback was recorded.</p>`;
+    feedbackSection.style.display = "block";
   } else if (order.status === "READY" || order.status === "COMPLETED") {
     feedbackSection.style.display = "block";
   }
@@ -723,6 +760,78 @@ function openModal(modalId) {
 function closeModal(modalId) {
   const m = document.getElementById(modalId);
   if (m) m.style.display = "none";
+}
+
+// Cafe Operations & AI Analytics
+async function openAnalyticsModal() {
+  openModal("analyticsModal");
+  await loadAnalyticsData();
+}
+
+async function loadAnalyticsData() {
+  try {
+    const res = await fetch("/api/analytics/insights");
+    if (!res.ok) throw new Error("Could not fetch analytics insights");
+    const data = await res.json();
+
+    const kpiTotal = document.getElementById("kpiTotalOrders");
+    if (kpiTotal) kpiTotal.textContent = data.total_orders;
+
+    const kpiActive = document.getElementById("kpiActiveOrders");
+    if (kpiActive) kpiActive.textContent = data.active_orders;
+
+    const kpiRating = document.getElementById("kpiAvgRating");
+    if (kpiRating) kpiRating.textContent = `★ ${data.average_rating}`;
+
+    const kpiReviews = document.getElementById("kpiTotalReviews");
+    if (kpiReviews) kpiReviews.textContent = data.total_reviews;
+
+    // Top drinks
+    const topDrinksEl = document.getElementById("analyticsTopDrinks");
+    if (topDrinksEl) {
+      if (!data.top_drinks || data.top_drinks.length === 0) {
+        topDrinksEl.innerHTML = `<span style="font-size: 0.8rem; color: var(--text-muted);">No sales data recorded yet. Place orders to populate roastery insights!</span>`;
+      } else {
+        const maxSold = Math.max(...data.top_drinks.map(d => d.sold), 1);
+        topDrinksEl.innerHTML = data.top_drinks.map(d => `
+          <div style="margin-bottom: 0.4rem;">
+            <div style="display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 0.2rem;">
+              <strong>${d.name}</strong>
+              <span style="color: var(--accent-gold); font-weight: 700;">${d.sold} cups</span>
+            </div>
+            <div style="background: rgba(255,255,255,0.08); height: 6px; border-radius: 9999px; overflow: hidden;">
+              <div style="background: linear-gradient(90deg, var(--accent-gold), #d97706); height: 100%; width: ${(d.sold / maxSold) * 100}%;"></div>
+            </div>
+          </div>
+        `).join("");
+      }
+    }
+
+    // Feedback list
+    const feedbackListEl = document.getElementById("analyticsFeedbackList");
+    if (feedbackListEl) {
+      if (!data.recent_feedbacks || data.recent_feedbacks.length === 0) {
+        feedbackListEl.innerHTML = `<span style="font-size: 0.8rem; color: var(--text-muted);">No taste feedback received yet. Submit feedback after receiving drinks to see Gemini sentiment!</span>`;
+      } else {
+        feedbackListEl.innerHTML = data.recent_feedbacks.map(f => `
+          <div style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.05); border-radius: 10px; padding: 0.75rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
+              <span style="color: var(--accent-gold); font-weight: 800; font-size: 0.85rem;">${'★'.repeat(f.rating)}${'☆'.repeat(5 - f.rating)}</span>
+              <span style="font-size: 0.75rem; color: var(--text-muted);">${f.order_id}</span>
+            </div>
+            ${f.comment ? `<p style="font-size: 0.8rem; color: #fff; margin-bottom: 0.35rem;">"${f.comment}"</p>` : ""}
+            ${f.ai_sentiment_summary ? `
+              <div style="background: rgba(226, 168, 92, 0.08); border-left: 2px solid var(--accent-gold); padding: 0.4rem 0.6rem; border-radius: 0 6px 6px 0; font-size: 0.75rem; color: #fef3c7;">
+                <strong>Gemini Analysis:</strong> ${f.ai_sentiment_summary}
+              </div>
+            ` : ""}
+          </div>
+        `).join("");
+      }
+    }
+  } catch (err) {
+    console.error("Failed to load analytics:", err);
+  }
 }
 
 // Event Listeners Init

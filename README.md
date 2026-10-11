@@ -261,6 +261,40 @@ gcloud run deploy sipsense-app `
 
 ---
 
+## 🚀 Enhancements, Production Roadmap & Missing Mandatories
+
+### 1. 🌟 Newly Implemented Upgrades (Current Release)
+- **📊 Roastery Operations & Business Intelligence Dashboard**: Real-time management screen wired into `/api/analytics/insights` displaying live queue volume, total orders, top-selling roasts with sales volume progress bars, and streaming customer feedback.
+- **🧠 Closed-Loop Customer Sentiment Intelligence**: When drinks are picked up, customers submit a 1–5 star rating and taste balance notes. Gemini 2.5 Flash analyzes customer comments and generates instant barista sentiment intelligence stored directly in PostgreSQL.
+- **🪑 Dine-In Table Location & Service Routing**: Table selector in checkout drawer allows guests to designate specific roastery tables (Table 1 Window, Table 2 Sensory Bar, Table 3 Roastery Floor, Table 4 Patio) or choose takeaway counter pickup.
+- **🔔 Live Web Audio Barista Pickup Chime**: Integrated dual-tone acoustic chime (587Hz / 880Hz) via the browser Web Audio API triggering as soon as an order advances to `READY`.
+- **💻 Standalone Offline & Online Dual-Engine Showcase (`demo.html`)**: Zero-dependency interactive web application with embedded mock catalog, full modal interactions, and one-click toggle to connect to live Cloud Run APIs.
+
+---
+
+### 2. ⚠️ Missing Mandatory Items for Production Enterprise Deployment
+While the current version demonstrates cutting-edge AI sensory discovery and live queue mechanics, the following foundational components are mandatory for commercial cafe deployments:
+
+| Category | Missing Mandatory Requirement | Architectural Recommendation |
+| :--- | :--- | :--- |
+| **💳 Payments** | Integrated Payment Gateway & Point of Sale (POS) | Integrate **Stripe Terminal**, **Apple Pay / Google Pay**, or regional UPI for cashless transactions prior to ticket creation. |
+| **⚡ Real-Time Streaming** | Sub-second Live Barista Sync (Replacing Short-Polling) | Replace 4-second client polling with **WebSockets** or **Server-Sent Events (SSE)** via FastAPI or Google Cloud Pub/Sub. |
+| **🔐 Authentication & RBAC** | Role-Based Access Control | Implement **Firebase Authentication** or **OAuth 2.0 / JWT**: Customers order via phone OTP/Google Auth; Baristas & Managers require authenticated staff PINs to access live dispatch and analytics. |
+| **🛡️ API Security & Protection** | Rate Limiting & Token Protection | Implement `slowapi` or **Cloud Armor** rate limiting on `/api/recommendations` and `/api/ai/chat` to protect Vertex AI Gemini quotas from automated scraping or prompt injection. |
+| **💾 High Availability (HA)** | Cloud SQL Multi-Zone Redundancy & Backups | Enable Cloud SQL **High Availability (Regional failover)** with automated daily backups and Point-In-Time Recovery (PITR) for zero data loss during cafe peak rushes. |
+| **📱 Native PWA** | Offline Progressive Web App Experience | Provide `manifest.json` and a Service Worker for home-screen installation on iOS/Android with background push notifications when coffee is ready. |
+
+---
+
+### 3. 🔮 Next-Gen Sensory AI Roadmap (Future Enhancements)
+- **📸 Multimodal Vision Latte Art & Crema Diagnostic**: Customers can snap a photo of their poured beverage; Gemini Vision analyzes micro-foam texture, crema thickness, and extraction color to score barista execution.
+- **⚖️ Dynamic Bean Inventory & Micro-Lot Depletion**: Automated recipe gram deduction (e.g. 18.5g per double shot) in PostgreSQL, automatically disabling items and recommending substitutes when single-origin batches run low.
+- **🧠 Barista Prep Batching Algorithm**: Intelligent queue clustering that automatically groups identical drink bases (e.g. 3 oat flat whites) to optimize barista steam-wand usage and decrease average wait times by ~40%.
+- **🧬 Flavor DNA & Customer Sensory Fingerprint**: Cross-session persistent customer flavor vectors that learn acidity preferences, roasting affinities, and suggest seasonal limited-edition roasts before they sell out.
+- **🖨️ Thermal Receipt Printer Integration**: Direct integration with Star Micronics / Epson Cloud PRNT to automatically print barista kitchen tickets on ticket placement.
+
+---
+
 ## 📄 License
 
 This project is licensed under the [MIT License](LICENSE) — see the [LICENSE](LICENSE) file for details.

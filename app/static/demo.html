@@ -761,6 +761,9 @@
       <button class="nav-btn" onclick="openModal('baristaModal')">
         <span>📋</span> <span>Barista Board</span>
       </button>
+      <button class="nav-btn" onclick="openAnalyticsModal()">
+        <span>📊</span> <span>Insights</span>
+      </button>
       <div class="cart-btn" onclick="openModal('cartModal')" title="View Order">
         🛒
         <span class="cart-count" id="cartCount">0</span>
@@ -979,6 +982,101 @@
           <div class="kanban-col">
             <div class="kanban-title"><span style="color: var(--status-ready);">● Ready</span> <span id="countReady">1</span></div>
             <div id="colReady"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Roastery Analytics & AI Insights Modal -->
+  <div id="analyticsModal" class="modal-overlay">
+    <div class="modal-card" style="max-width: 720px;">
+      <div class="modal-header">
+        <div>
+          <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--accent-gold); font-weight: 800;">Business & Sensory Intelligence</span>
+          <h3 style="font-size: 1.35rem; font-weight: 900;">Roastery Operations & AI Insights</h3>
+        </div>
+        <button class="modal-close" onclick="closeModal('analyticsModal')">✕</button>
+      </div>
+      <div class="modal-body">
+        <!-- KPI Cards -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 0.85rem; margin-bottom: 1.5rem;">
+          <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: 12px; padding: 1rem; text-align: center;">
+            <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">Total Orders</span>
+            <div id="demoKpiTotal" style="font-size: 1.6rem; font-weight: 900; color: #fff; margin-top: 0.2rem;">48</div>
+          </div>
+          <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: 12px; padding: 1rem; text-align: center;">
+            <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">Active in Queue</span>
+            <div id="demoKpiActive" style="font-size: 1.6rem; font-weight: 900; color: #3b82f6; margin-top: 0.2rem;">3</div>
+          </div>
+          <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: 12px; padding: 1rem; text-align: center;">
+            <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">Avg Taste Rating</span>
+            <div id="demoKpiRating" style="font-size: 1.6rem; font-weight: 900; color: var(--accent-gold); margin-top: 0.2rem;">★ 4.9</div>
+          </div>
+          <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: 12px; padding: 1rem; text-align: center;">
+            <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">Customer Reviews</span>
+            <div id="demoKpiReviews" style="font-size: 1.6rem; font-weight: 900; color: #10b981; margin-top: 0.2rem;">41</div>
+          </div>
+        </div>
+
+        <!-- Top Selling Drinks -->
+        <div style="margin-bottom: 1.5rem; background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: 14px; padding: 1.25rem;">
+          <h4 style="font-size: 0.95rem; font-weight: 800; margin-bottom: 0.75rem; color: var(--text-main);">☕ Top Selling Artisanal Roasts</h4>
+          <div style="display: flex; flex-direction: column; gap: 0.6rem;">
+            <div>
+              <div style="display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 0.2rem;">
+                <strong>Brown Sugar Shaken Espresso</strong>
+                <span style="color: var(--accent-gold); font-weight: 700;">19 cups</span>
+              </div>
+              <div style="background: rgba(255,255,255,0.08); height: 6px; border-radius: 9999px; overflow: hidden;">
+                <div style="background: linear-gradient(90deg, var(--accent-gold), #d97706); height: 100%; width: 100%;"></div>
+              </div>
+            </div>
+            <div>
+              <div style="display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 0.2rem;">
+                <strong>Nitro Cold Brew with Sweet Cream</strong>
+                <span style="color: var(--accent-gold); font-weight: 700;">14 cups</span>
+              </div>
+              <div style="background: rgba(255,255,255,0.08); height: 6px; border-radius: 9999px; overflow: hidden;">
+                <div style="background: linear-gradient(90deg, var(--accent-gold), #d97706); height: 100%; width: 73%;"></div>
+              </div>
+            </div>
+            <div>
+              <div style="display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 0.2rem;">
+                <strong>Yirgacheffe Citrus Pour Over</strong>
+                <span style="color: var(--accent-gold); font-weight: 700;">9 cups</span>
+              </div>
+              <div style="background: rgba(255,255,255,0.08); height: 6px; border-radius: 9999px; overflow: hidden;">
+                <div style="background: linear-gradient(90deg, var(--accent-gold), #d97706); height: 100%; width: 47%;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent Customer Feedback & Gemini AI Sentiment -->
+        <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: 14px; padding: 1.25rem;">
+          <h4 style="font-size: 0.95rem; font-weight: 800; margin-bottom: 0.75rem; color: var(--text-main);">🧠 Gemini AI Customer Sentiment Intelligence</h4>
+          <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+            <div style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.05); border-radius: 10px; padding: 0.75rem;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
+                <span style="color: var(--accent-gold); font-weight: 800; font-size: 0.85rem;">★★★★★</span>
+                <span style="font-size: 0.75rem; color: var(--text-muted);">ORD-9281 (Elena R.)</span>
+              </div>
+              <p style="font-size: 0.8rem; color: #fff; margin-bottom: 0.35rem;">"The brown sugar oat espresso has unmatched sweetness and aroma. Perfect temperature."</p>
+              <div style="background: rgba(226, 168, 92, 0.08); border-left: 2px solid var(--accent-gold); padding: 0.4rem 0.6rem; border-radius: 0 6px 6px 0; font-size: 0.75rem; color: #fef3c7;">
+                <strong>Gemini Analysis:</strong> Customer highlights exceptional sweetness balance and oat emulsion; positive sentiment towards barista shake technique.
+              </div>
+            </div>
+            <div style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.05); border-radius: 10px; padding: 0.75rem;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
+                <span style="color: var(--accent-gold); font-weight: 800; font-size: 0.85rem;">★★★★★</span>
+                <span style="font-size: 0.75rem; color: var(--text-muted);">ORD-9278 (Marcus P.)</span>
+              </div>
+              <p style="font-size: 0.8rem; color: #fff; margin-bottom: 0.35rem;">"Citrus notes in the Ethiopian pour over were crisp and clean. Best brew of the week."</p>
+              <div style="background: rgba(226, 168, 92, 0.08); border-left: 2px solid var(--accent-gold); padding: 0.4rem 0.6rem; border-radius: 0 6px 6px 0; font-size: 0.75rem; color: #fef3c7;">
+                <strong>Gemini Analysis:</strong> Enthusiastic appreciation for heirloom acidity clarity and brew extraction time.
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -1328,6 +1426,20 @@
     function closeModal(id) {
       const m = document.getElementById(id);
       if (m) m.style.display = "none";
+    }
+
+    function openAnalyticsModal() {
+      openModal("analyticsModal");
+      if (isCloudRunMode) {
+        fetch(`${CLOUD_RUN_API_BASE}/api/analytics/insights`)
+          .then(r => r.json())
+          .then(d => {
+            if (d.total_orders != null) document.getElementById("demoKpiTotal").textContent = d.total_orders;
+            if (d.active_orders != null) document.getElementById("demoKpiActive").textContent = d.active_orders;
+            if (d.average_rating != null) document.getElementById("demoKpiRating").textContent = "★ " + d.average_rating;
+            if (d.total_reviews != null) document.getElementById("demoKpiReviews").textContent = d.total_reviews;
+          }).catch(e => console.log("Analytics offline fallback active"));
+      }
     }
 
     // Drink Customizer
