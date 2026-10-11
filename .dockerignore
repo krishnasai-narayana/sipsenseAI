@@ -1,0 +1,12 @@
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.env
+sa-key.json
+cloud-sql-proxy.exe
+.git/
+.gitignore
+*.log

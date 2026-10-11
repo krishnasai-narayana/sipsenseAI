@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SipSense AI | Artisanal Coffee Discovery & Live Barista Queue</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+
+  <!-- Top Live Queue Ticker -->
+  <div class="queue-ticker">
+    <div>
+      <span class="ticker-pulse"></span>
+      <strong>Barista Station Live:</strong> Handcrafting single-origin roasts & nitrogen infusions
+    </div>
+    <div style="display: flex; gap: 1rem; align-items: center;">
+      <span>Cloud SQL: <strong style="color: #10b981;">sipsense-pg</strong></span>
+      <span>Gemini 2.5: <strong style="color: var(--accent-gold);">Active</strong></span>
+    </div>
+  </div>
+
+  <!-- Main Navigation Header -->
+  <header class="header">
+    <div class="brand" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">
+      <div class="brand-icon">☕</div>
+      <div>
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+          <span class="brand-name">SipSense</span>
+          <span class="brand-badge">AI 2.0</span>
+        </div>
+        <p style="font-size: 0.7rem; color: var(--text-muted); margin-top: -3px;">Specialty Roastery & Sensory Lab</p>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <button class="nav-btn primary" onclick="openModal('matchmakerModal')">
+        <span>✨</span> Find My Sip
+      </button>
+      <button class="nav-btn" onclick="startTrackingOrder(activeOrder)" id="navTrackerBtn">
+        <span>📍</span> Track Order
+      </button>
+      <button class="nav-btn" onclick="openBaristaQueue()">
+        <span>📋</span> Barista Board
+      </button>
+      <div class="cart-btn" onclick="openCartDrawer()" title="View Order">
+        🛒
+        <span class="cart-count" id="cartCount">0</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Container -->
+  <main class="container">
+
+    <!-- Hero Section -->
+    <section class="hero">
+      <div class="hero-tag">
+        <span>✦</span> Powered by Gemini 2.5 Flash & Google Cloud SQL
+      </div>
+      <h1 class="hero-title">
+        Coffee crafted for your <span>exact taste chemistry</span>.
+      </h1>
+      <p class="hero-subtitle">
+        Scan your QR code, express your morning craving, or let our AI Sommelier tailor an artisanal single-origin pour, nitro cold brew, or velvet latte just for you.
+      </p>
+
+      <!-- AI Sensory Search Bar -->
+      <div class="search-wrapper">
+        <input 
+          type="text" 
+          id="cravingInput" 
+          class="search-input" 
+          placeholder="E.g. 'Craving something smooth with oat milk, hazelnut notes and low acid'..."
+        />
+        <button class="search-btn" onclick="triggerCravingSearch()">
+          <span>✨</span> Ask Gemini
+        </button>
+      </div>
+
+      <!-- Category Filter Pills -->
+      <div class="category-pills">
+        <button class="pill-btn active" data-cat="All">All Roasts & Brews</button>
+        <button class="pill-btn" data-cat="Cold Brew">Cold Brew</button>
+        <button class="pill-btn" data-cat="Espresso">Espresso</button>
+        <button class="pill-btn" data-cat="Specialty">Specialty</button>
+        <button class="pill-btn" data-cat="Pour Over">Pour Over</button>
+        <button class="pill-btn" data-cat="Latte & Macchiato">Lattes & Macchiatos</button>
+      </div>
+    </section>
+
+    <!-- AI Personalized Recommendations Panel -->
+    <section id="aiResultsPanel" class="ai-results-panel">
+      <div class="ai-header">
+        <div class="ai-title-wrap">
+          <div class="ai-icon-badge">✨</div>
+          <div>
+            <h3 style="font-size: 1.25rem; font-weight: 800; color: var(--text-main);">Gemini AI Sommelier Tasting Flight</h3>
+            <p style="font-size: 0.8rem; color: var(--text-muted);">Curated specifically for your flavor parameters</p>
+          </div>
+        </div>
+        <button class="modal-close" onclick="document.getElementById('aiResultsPanel').style.display='none'">✕</button>
+      </div>
+      <p id="aiSommelierNote" class="ai-sommelier-note"></p>
+      <div id="aiCardsGrid" class="ai-cards-grid"></div>
+    </section>
+
+    <!-- Menu Section Header -->
+    <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 1.25rem;">
+      <div>
+        <h2 style="font-size: 1.6rem; font-weight: 800;">Curated Cafe Catalog</h2>
+        <p style="font-size: 0.85rem; color: var(--text-muted);">Small-batch ethical roasts, house-made botanicals & nitro taps</p>
+      </div>
+      <span style="font-size: 0.8rem; color: var(--accent-gold); font-weight: 600;">100% Arabica & Heirloom Varieties</span>
+    </div>
+
+    <!-- Drink Catalog Grid -->
+    <div id="menuGrid" class="menu-grid">
+      <div style="grid-column: 1/-1; text-align: center; padding: 3rem;">
+        <span class="ticker-pulse"></span> Loading freshly roasted offerings from Cloud SQL...
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Drink Customizer Modal -->
+  <div id="customizerModal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div>
+          <h3 id="custItemName" style="font-size: 1.25rem; font-weight: 800;">Customize Drink</h3>
+          <p id="custItemDesc" style="font-size: 0.8rem; color: var(--text-muted);"></p>
+        </div>
+        <button class="modal-close" onclick="closeModal('customizerModal')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Milk / Dairy Alternative</label>
+          <select id="custMilk" class="select-input"></select>
+        </div>
+
+        <div class="form-group">
+          <div style="display: flex; justify-content: space-between;">
+            <label class="form-label">Sweetness Level</label>
+            <span id="custSweetnessVal" style="font-size: 0.85rem; font-weight: 800; color: var(--accent-gold);">2/5</span>
+          </div>
+          <input type="range" id="custSweetness" min="0" max="5" value="2" style="width: 100%; accent-color: var(--accent-gold);" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Serving Temperature</label>
+          <select id="custTemp" class="select-input">
+            <option value="Hot">Hot (Velvet Texture)</option>
+            <option value="Iced">Iced (Over Clear Cubes)</option>
+            <option value="Extra Ice">Extra Iced</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Extra Espresso Shots (+$0.75 / shot)</label>
+          <select id="custShots" class="select-input">
+            <option value="0">Standard Extraction</option>
+            <option value="1">+1 Extra Ristretto Shot (+$0.75)</option>
+            <option value="2">+2 Double Boost (+$1.50)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Barista Notes (e.g. oat milk extra hot)</label>
+          <input type="text" id="custNotes" class="text-input" placeholder="Any special preparation preference..." />
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+          <div>
+            <span style="font-size: 0.8rem; color: var(--text-muted);">Total with Customizations</span>
+            <div id="custTotalPrice" style="font-size: 1.4rem; font-weight: 800; color: var(--accent-gold);">$0.00</div>
+          </div>
+          <button class="nav-btn primary" style="padding: 0.75rem 1.5rem; font-size: 0.95rem;" onclick="addCustomizedToCart()">
+            Add to Cup ☕
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cart / Checkout Drawer -->
+  <div id="cartModal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 style="font-size: 1.25rem; font-weight: 800;">Your Coffee Cup</h3>
+        <button class="modal-close" onclick="closeModal('cartModal')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div id="cartItemsList"></div>
+
+        <div style="margin: 1.5rem 0 1rem;">
+          <div class="form-group">
+            <label class="form-label">Customer Name</label>
+            <input type="text" id="orderCustomerName" class="text-input" placeholder="E.g. Alex M." />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Mobile Number (Optional SMS alert)</label>
+            <input type="tel" id="orderCustomerPhone" class="text-input" placeholder="+1 (555) 000-0000" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Order / Table Notes</label>
+            <input type="text" id="orderSpecialNotes" class="text-input" placeholder="Table #4 / For here" />
+          </div>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem 0; border-top: 1px solid var(--border-color);">
+          <span style="font-size: 1rem; font-weight: 700;">Subtotal</span>
+          <span id="cartSubtotal" style="font-size: 1.4rem; font-weight: 800; color: var(--accent-gold);">$0.00</span>
+        </div>
+
+        <button id="checkoutBtn" class="nav-btn primary" style="width: 100%; justify-content: center; padding: 0.9rem; font-size: 1rem;" onclick="submitOrder()">
+          Place Coffee Order
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Live Order Tracking Modal -->
+  <div id="trackerModal" class="modal-overlay">
+    <div class="modal-card" style="max-width: 580px;">
+      <div class="modal-header">
+        <div>
+          <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--accent-gold); font-weight: 800;">Live Barista Tracker</span>
+          <h3 id="trackOrderId" style="font-size: 1.35rem; font-weight: 900;">Order Status</h3>
+        </div>
+        <button class="modal-close" onclick="closeModal('trackerModal')">✕</button>
+      </div>
+      <div class="modal-body">
+        
+        <!-- Live Status Stepper -->
+        <div class="tracker-status-bar">
+          <div id="stepPlaced" class="status-step active">
+            <div class="step-circle">1</div>
+            <span class="step-title">Placed</span>
+          </div>
+          <div id="stepBrewing" class="status-step">
+            <div class="step-circle">2</div>
+            <span class="step-title">Brewing</span>
+          </div>
+          <div id="stepReady" class="status-step">
+            <div class="step-circle">3</div>
+            <span class="step-title">Ready!</span>
+          </div>
+        </div>
+
+        <!-- Animated Status Message -->
+        <div id="trackStatusMsg" style="text-align: center; font-weight: 600; font-size: 1rem; color: var(--accent-cream); margin-bottom: 1.5rem;">
+          Your order ticket has been dispatched to the baristas.
+        </div>
+
+        <!-- Live Queue Position Badge -->
+        <div id="queueBanner" class="queue-card">
+          <div style="display: flex; justify-content: space-around;">
+            <div>
+              <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">Queue Position</span>
+              <div id="trackQueuePosition" class="queue-num">#1</div>
+            </div>
+            <div style="border-left: 1px solid rgba(226,168,92,0.3); padding-left: 1.5rem;">
+              <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">Est. Ready In</span>
+              <div id="trackWaitTime" class="queue-num">~5 min</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pickup Badge -->
+        <div style="background: var(--bg-card); border: 1px dashed var(--border-color); border-radius: var(--radius-md); padding: 1.25rem; text-align: center; margin-bottom: 1.5rem;">
+          <span style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Show to Barista at Counter</span>
+          <div style="font-size: 2.2rem; font-weight: 900; letter-spacing: 0.15em; color: var(--accent-gold); margin: 0.25rem 0;" id="trackPickupCode">
+            842
+          </div>
+          <span style="font-size: 0.85rem; color: var(--text-muted);" id="trackCustomerName">Customer</span>
+          <div style="font-size: 0.8rem; color: var(--text-dim); margin-top: 0.25rem;">Total Paid: <span id="trackTotal" style="color: var(--text-main); font-weight: 700;"></span></div>
+        </div>
+
+        <!-- Feedback Form -->
+        <div id="feedbackSection" style="display: none; background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 1rem; margin-top: 1rem;">
+          <h4 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 0.5rem; text-align: center;">How was your sip?</h4>
+          <div style="display: flex; gap: 1rem; margin-bottom: 0.75rem;">
+            <div style="flex: 1;">
+              <label style="font-size: 0.75rem; color: var(--text-muted);">Overall Rating</label>
+              <select id="feedbackRating" class="select-input" style="padding: 0.4rem;">
+                <option value="5">★★★★★ (5 - Exceptional)</option>
+                <option value="4">★★★★☆ (4 - Great)</option>
+                <option value="3">★★★☆☆ (3 - Good)</option>
+                <option value="2">★★☆☆☆ (2 - Fair)</option>
+                <option value="1">★☆☆☆☆ (1 - Needs tweak)</option>
+              </select>
+            </div>
+            <div style="flex: 1;">
+              <label style="font-size: 0.75rem; color: var(--text-muted);">Taste Balance</label>
+              <select id="feedbackTaste" class="select-input" style="padding: 0.4rem;">
+                <option value="5">Perfect Balance</option>
+                <option value="4">Slightly sweet</option>
+                <option value="3">Bold / Intense</option>
+                <option value="2">Mild</option>
+              </select>
+            </div>
+          </div>
+          <input type="text" id="feedbackComment" class="text-input" placeholder="Optional comments on aroma or acidity..." style="margin-bottom: 0.75rem;" />
+          <button class="nav-btn primary" style="width: 100%; justify-content: center; font-size: 0.85rem;" onclick="submitOrderFeedback()">
+            Submit Taste Feedback
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- "Find My Sip" AI Matchmaker Quiz Modal -->
+  <div id="matchmakerModal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div>
+          <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--accent-gold); font-weight: 800;">Gemini 2.5 Sensory Engine</span>
+          <h3 style="font-size: 1.3rem; font-weight: 800;">Find My Perfect Sip</h3>
+        </div>
+        <button class="modal-close" onclick="closeModal('matchmakerModal')">✕</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.25rem;">
+          Tell our Sommelier about your ideal taste profile and we will curate a personalized match from our active roaster catalog.
+        </p>
+
+        <div class="form-group">
+          <label class="form-label">Preferred Roast Level</label>
+          <select id="quizRoast" class="select-input">
+            <option value="Any">Any / Surprise Me</option>
+            <option value="Light">Light Roast (Floral, bright acidity, tea-like clarity)</option>
+            <option value="Medium">Medium Roast (Balanced, chocolate malt, caramel)</option>
+            <option value="Dark">Dark Roast (Full body, smoky, low acid, bold cocoa)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Sweetness Preference</label>
+          <select id="quizSweet" class="select-input">
+            <option value="0">0 - Zero sugar / Pure black coffee</option>
+            <option value="1">1 - Barely sweet / Hint of natural essence</option>
+            <option value="2" selected>2 - Balanced specialty sweetness</option>
+            <option value="3">3 - Noticeably sweet (Vanilla / Brown Sugar)</option>
+            <option value="4">4 - Indulgent treat / Dessert style</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Milk / Texture Preference</label>
+          <select id="quizMilk" class="select-input">
+            <option value="Any">No Preference</option>
+            <option value="Oat Milk">Oat Milk (Nutty, creamy & vegan)</option>
+            <option value="Whole Milk">Farm Fresh Whole Milk (Silky microfoam)</option>
+            <option value="Almond Milk">Almond Milk (Light & roasted)</option>
+            <option value="None">None / Pure black coffee</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Temperature Preference</label>
+          <select id="quizTemp" class="select-input">
+            <option value="Any">Either</option>
+            <option value="Hot">Hot & Warming</option>
+            <option value="Iced">Iced & Refreshing</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Caffeine Level</label>
+          <select id="quizCaff" class="select-input">
+            <option value="Any">Standard Caffeine</option>
+            <option value="High">Maximum Boost (Cold Brew / Extra Shot)</option>
+            <option value="Medium">Gentle Afternoon Energy</option>
+            <option value="Decaf">100% Decaf (Natural Sugarcane Process)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Flavor Notes or Dietary Needs</label>
+          <input type="text" id="quizNotes" class="text-input" placeholder="E.g. Love hazelnut & citrus, dairy free, low acid" />
+        </div>
+
+        <button class="nav-btn primary" style="width: 100%; justify-content: center; padding: 0.9rem; font-size: 1rem; margin-top: 1rem;" onclick="submitMatchmaker()">
+          Curate My Match with Gemini ✨
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Barista Queue Live Board Modal -->
+  <div id="baristaModal" class="modal-overlay">
+    <div class="modal-card" style="max-width: 650px;">
+      <div class="modal-header">
+        <div>
+          <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--accent-amber); font-weight: 800;">Barista Workflow Screen</span>
+          <h3 style="font-size: 1.3rem; font-weight: 800;">Live Preparation Queue</h3>
+        </div>
+        <div style="display: flex; gap: 0.5rem; align-items: center;">
+          <button class="nav-btn" style="padding: 0.35rem 0.75rem; font-size: 0.75rem;" onclick="refreshBaristaQueue()">↻ Refresh</button>
+          <button class="modal-close" onclick="closeModal('baristaModal')">✕</button>
+        </div>
+      </div>
+      <div class="modal-body">
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">
+          Advance tickets through the brewing lifecycle. Status updates sync in real time to the customer tracking screen!
+        </p>
+        <div id="baristaQueueList"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Floating AI Sommelier Chat FAB -->
+  <div class="chat-fab" onclick="toggleChatDrawer()" title="Chat with AI Sommelier">
+    💬
+  </div>
+
+  <!-- Floating Chat Drawer -->
+  <div id="chatDrawer" class="chat-drawer" style="display: none;">
+    <div class="chat-header">
+      <div style="display: flex; align-items: center; gap: 0.5rem;">
+        <span style="font-size: 1.2rem;">☕</span>
+        <div>
+          <strong style="font-size: 0.9rem;">SipSense Sommelier</strong>
+          <div style="font-size: 0.7rem; color: #10b981;">Online • Gemini 2.5 Flash</div>
+        </div>
+      </div>
+      <button class="modal-close" onclick="toggleChatDrawer()">✕</button>
+    </div>
+    <div id="chatMessages" class="chat-messages">
+      <div class="chat-bubble bot">
+        Welcome to SipSense! I'm your AI Coffee Sommelier. Ask me anything about our single origins, brew methods, flavor profiles, or customized pairings!
+      </div>
+    </div>
+    <div class="chat-input-row">
+      <input type="text" id="chatInput" class="chat-input" placeholder="Ask about roast notes, oat milk, or low acid..." />
+      <button class="nav-btn primary" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;" onclick="sendChatMessage()">
+        Send
+      </button>
+    </div>
+  </div>
+
+  <script src="/static/js/app.js"></script>
+</body>
+</html>

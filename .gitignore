@@ -1,0 +1,26 @@
+# Virtual Environment
+.venv/
+venv/
+ENV/
+
+# Credentials & Secrets
+.env
+sa-key.json
+*.pem
+*.key
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+
+# Cloud SQL Proxy
+cloud-sql-proxy.exe
+cloud-sql-proxy
+
+# OS & IDE
+.vscode/
+.idea/
+*.log
